@@ -1,10 +1,9 @@
-import {Constructor} from "@tvenceslau/decorator-validation";
 
 /**
  * @summary defines an Injectable type
  * @memberOf module:injectable-decorators
  */
-export type Injectable<T> = Constructor<T> | T
+export type Injectable<T> = {new(...args: any[]): T} | T
 
 /**
  * @summary Interface for an injectable registry
