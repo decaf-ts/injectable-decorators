@@ -2,9 +2,14 @@
   "name": "@tvenceslau/injectable-decorators",
   "version": "1.0.3",
   "description": "injectable decorators extension for decorator validation",
-  "main": "./lib/index.js",
-  "module": "./lib/index.js",
+  "type": "module",
+  "exports": {
+    "require": "./lib/index.js",
+    "import": "./lib/esm/index.js"
+  },
+  "main": "lib/index.js",
   "scripts": {
+    "update-dependencies": "rimraf ./node_modules/@tvenceslau && rimraf package-lock.json && npm install",
     "build": "rimraf ./lib && rimraf ./dist && gulp dev",
     "build:prod": "rimraf ./lib && rimraf ./dist && gulp prod",
     "test": "jest --coverage --testPathPattern=\"/tests/(unit|web)\" --globalSetup=\"\"",

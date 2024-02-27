@@ -1,19 +1,22 @@
-const path = require('path');
-const gulp = require('gulp');
+import path from "path";
+import gulp from "gulp";
 const {src, dest, parallel, series} = gulp;
-const ts = require('gulp-typescript');
-const sourcemaps = require('gulp-sourcemaps');
-const uglify = require('gulp-uglify');
-const gulpIf = require('gulp-if')
-const merge = require('merge-stream');
-const named = require('vinyl-named');
-const replace = require('gulp-replace');
-const webpack = require('webpack-stream');
-const run = require("gulp-run-command").default
+import ts from "gulp-typescript";
+const {createProject} = ts;
+import sourcemaps from "gulp-sourcemaps";
+import uglify from "gulp-uglify";
+import gulpIf from "gulp-if";
+import merge from "merge-stream";
+import named from "vinyl-named";
+import replace from "gulp-replace";
+import webpack from "webpack-stream";
+import run from "gulp-run-command";
 
-let {name, version} = require('./package.json');
+import pkg from './package.json' assert {type: "json"}
+let {name, version} = pkg
+
 if (name.includes("/"))
-    name = name.split("/")[1] // for scopes packages
+    name = name.split("/")[1] // for scoped packages
 const VERSION_STRING = "##VERSION##"
 
 function patchFiles (isDev){
@@ -47,7 +50,7 @@ function getWebpackConfig(isESM, isDev){
                         }
                     }],
                     include:[
-                        path.resolve(__dirname, "src")
+                        path.join(process.cwd(), "./src")
                     ],
                     exclude: /node_modules/,
                 }
@@ -60,17 +63,22 @@ function getWebpackConfig(isESM, isDev){
 
         output: {
             filename: `${name}.bundle.${!isDev ? 'min.' : ''}${isESM ? 'esm.' : ''}js`,
-            path: path.resolve(__dirname, "dist/"),
-            library: {
-                type: "module",
-            },
+            path: path.join(process.cwd(), "./dist/")
         }
     }
 
     if(isESM)
         webPackConfig.experiments = {outputModule: true}
     else
-        webPackConfig.output = Object.assign({}, webPackConfig.output, {globalObject: 'this', library: name, libraryTarget: "umd", umdNamedDefine: true,});
+        webPackConfig.output = Object.assign(
+            {},
+            webPackConfig.output,
+            {
+                globalObject: 'this',
+                library: name,
+                libraryTarget: "umd",
+                umdNamedDefine: true,
+            });
 
     if (isDev)
         webPackConfig.devtool = 'eval-source-map';
@@ -78,25 +86,31 @@ function getWebpackConfig(isESM, isDev){
     return webPackConfig;
 }
 
-function exportDefault(isDev){
+function exportDefault(isDev, mode){
     return function exportDefault(){
-        const tsProject = ts.createProject('tsconfig.json', {
-            target: "es5",
-            module: "commonjs",
-            declaration: true,
-            declarationMap: true,
-            emitDeclarationOnly: false,
-            isolatedModules: false
-        });
+        function createLib(){
+            const tsProject = createProject('tsconfig.json', {
+                module: mode,
+                declaration: true,
+                declarationMap: true,
+                emitDeclarationOnly: false,
+                isolatedModules: false
+            });
 
-        const stream =  src('./src/**/*.ts')
-            .pipe(gulpIf(isDev, sourcemaps.init()))
-            .pipe(tsProject())
+            const stream =  src('./src/**/*.ts')
+                .pipe(replace(VERSION_STRING, `${version}`))
+                .pipe(gulpIf(isDev, sourcemaps.init()))
+                .pipe(tsProject())
 
-        return merge([
-            stream.dts.pipe(dest("lib")),
-            stream.js.pipe(gulpIf(!isDev, uglify())).pipe(gulpIf(isDev, sourcemaps.write())).pipe(dest("lib"))
-        ])
+            const destPath = `lib${mode === "commonjs" ? "" : "/esm"}`;
+
+            return merge([
+                stream.dts.pipe(dest(destPath)),
+                stream.js.pipe(gulpIf(!isDev, uglify())).pipe(gulpIf(isDev, sourcemaps.write())).pipe(dest(destPath))
+            ])
+        }
+
+        return createLib()
     }
 
 }
@@ -117,34 +131,23 @@ function exportJSDist(){
     return exportBundles(false, false);
 }
 
-exports.dev = series(
-    exportDefault(true),
-    patchFiles(true)
-)
-exports.prod = series(
-    parallel(
-        exportDefault(true),
-        exportESMDist, exportJSDist)
-    ,
-    parallel(
-        patchFiles(false),
-        patchFiles(true)
-    )
-);
-
-function docs(){
+function makeDocs(){
     const copyFiles = (source, destination) => {
         return function copyFiles(){
-            return src(source + "/**/*" , { base: source }).pipe(dest(destination));
+            try {
+                return src(source + "/**/*" , { base: source }).pipe(dest(destination));
+            } catch (e){
+                throw e
+            }
         }
     }
 
     function compileReadme ()  {
-        return run("npx markdown-include ./mdCompile.json")()
+        return run.default("npx markdown-include ./mdCompile.json")()
     }
 
     function compileDocs() {
-        return run("npx jsdoc -c jsdocs.json -t ./node_modules/better-docs")()
+        return run.default("npx jsdoc -c jsdocs.json -t ./node_modules/better-docs")()
     }
 
 
@@ -165,4 +168,18 @@ function docs(){
     )
 }
 
-exports.docs = docs()
+export const dev = series(
+    exportDefault(true,"commonjs"),
+    exportDefault(true,"es2022")
+)
+
+export const prod = series(
+    parallel(
+        series(
+            exportDefault(true,"commonjs"),
+            exportDefault(true,"es2022")
+        ), exportESMDist, exportJSDist),
+    patchFiles(true)
+)
+
+export const docs = makeDocs()
