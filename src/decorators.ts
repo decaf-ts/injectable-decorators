@@ -17,7 +17,7 @@ const getInjectKey = (key: string) => InjectablesKeys.REFLECT + key;
  *
  * @param {string} [category] defaults to the class Name. (Useful when minification occours and names are changed so we can no longer rely on the class name, or when we want to upcast the Object)
  * @param {boolean} [force] defines if the injectable should override the already existing instance (if any). (only meant for extending decorators
- * @param {any[]} [props] additional properties to pass for the decorator metadata. (only meant for 'extending' classes)
+ * @param instanceCallback
  *
  * @function injectable
  *
@@ -27,7 +27,7 @@ export const injectable =
   (
     category: string | undefined = undefined,
     force: boolean = false,
-    ...props: any[]
+    instanceCallback?: (instance: any, ...args: any[]) => void,
   ) =>
   (original: any) => {
     const name = category || original.name;
@@ -37,9 +37,16 @@ export const injectable =
       if (!inj) {
         Injectables.register(original, name, true, force);
         inj = Injectables.get<any>(name, ...args);
-        if (!inj) {
-          return undefined;
-        }
+        if (!inj) return undefined;
+
+        if (instanceCallback)
+          try {
+            instanceCallback(inj);
+          } catch (e: any) {
+            console.error(
+              `Failed to call injectable callback for ${name}: ${e}`,
+            );
+          }
       }
 
       const metadata = Object.assign(
@@ -47,7 +54,6 @@ export const injectable =
         {
           class: name,
         },
-        props || {},
       );
 
       Reflect.defineMetadata(

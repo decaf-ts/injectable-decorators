@@ -54,7 +54,7 @@ export class InjectableRegistryImp implements InjectablesRegistry {
     try {
       const innerCache = this.cache[name];
       const buildDef = { name: name };
-      if (!innerCache.isSingleton && !innerCache.instance)
+      if (!innerCache.singleton && !innerCache.instance)
         return this.build<T>(buildDef, ...args);
       return innerCache.instance || this.build<T>(buildDef, ...args);
     } catch (e) {
