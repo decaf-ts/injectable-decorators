@@ -1,5 +1,3 @@
-## Injectable Decorators
+## Simple Injectables engine
 
 Simple implementation of injectables
-
-#include "./workdocs/tutorials/00-Install.md"

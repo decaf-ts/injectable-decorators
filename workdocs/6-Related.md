@@ -1,5 +1,4 @@
 ### Related
 
-[decorator-validation](https://github.com/TiagoVenceslau/decorator-decorators)
-
-[db-decorators](https://github.com/TiagoVenceslau/db-decorators)
+[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=decaf-ts&repo=decorator-validation)](https://github.com/decaf-ts/decorator-validation)
+[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=decaf-ts&repo=db-decorators)](https://github.com/decaf-ts/db-decorators)
