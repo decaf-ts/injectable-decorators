@@ -1,6 +1,6 @@
 import {inject, injectable} from "../../src";
 import {Injectables} from "../../src/Injectables";
-import {InjectableRegistryImp} from "../../lib";
+import {InjectableRegistryImp} from "../../src";
 
 @injectable("SomeObject")
 class SomeObject{
@@ -135,8 +135,6 @@ describe(`Injectables`, function(){
         class AAA {
             protected a: string = "aaa"
         }
-
-        console.log("here")
 
         @injectable("AAA")
         class BBB extends AAA{

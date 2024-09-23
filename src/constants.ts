@@ -9,7 +9,7 @@
  * @memberOf injectable-decorators
  */
 export const InjectablesKeys = {
-    REFLECT: "inject.db.",
-    INJECTABLE: "injectable",
-    INJECT: "inject"
-}
+  REFLECT: "inject.db.",
+  INJECTABLE: "injectable",
+  INJECT: "inject",
+};

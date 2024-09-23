@@ -14,13 +14,20 @@ jobs:
       contents: read
       pages: write
       id-token: write
+    strategy:
+      matrix:
+        node-version: [ 20.x ]
     environment:
       name: github-pages
-#      url: ${{steps.deployment.outputs.page_url}}
+    #      url: ${{steps.deployment.outputs.page_url}}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
       - run: npm ci
       - run: npm run docs
       - name: Setup Pages

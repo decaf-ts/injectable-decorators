@@ -10,13 +10,16 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
         with:
-          node-version: 20
+          node-version: ${{ matrix.node-version }}
           registry-url: https://registry.npmjs.org/
       - run: npm ci
       - run: npm run build:prod
+      - run: npm run test:all
       - run: npm publish --access public
         env:
           GITHUB_TOKEN: ${{ secrets.CONSECUTIVE_ACTION_TRIGGER }}

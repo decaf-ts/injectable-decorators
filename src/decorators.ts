@@ -1,6 +1,6 @@
-import {InjectablesKeys} from "./constants";
-import {Injectables} from "./Injectables";
-import {getTypeFromDecorator} from "./utils";
+import { InjectablesKeys } from "./constants";
+import { Injectables } from "./Injectables";
+import { getTypeFromDecorator } from "./utils";
 
 /**
  * @summary Return the reflection key for injectables
@@ -23,45 +23,55 @@ const getInjectKey = (key: string) => InjectablesKeys.REFLECT + key;
  *
  * @memberOf module:injectable-decorators.Decorators
  */
-export const injectable = (category: string  | undefined = undefined, force: boolean = false, ...props: any[]) => (original: any) => {
+export const injectable =
+  (
+    category: string | undefined = undefined,
+    force: boolean = false,
+    ...props: any[]
+  ) =>
+  (original: any) => {
     const name = category || original.name;
     // the new constructor behaviour
-    const newConstructor : any = function (...args: any[]) {
-        let inj: any = Injectables.get<any>(name, ...args);
-        if (!inj){
-            Injectables.register(original, name, true, force);
-            inj = Injectables.get<any>(name, ...args);
-            if (!inj){
-                return undefined;
-            }
+    const newConstructor: any = function (...args: any[]) {
+      let inj: any = Injectables.get<any>(name, ...args);
+      if (!inj) {
+        Injectables.register(original, name, true, force);
+        inj = Injectables.get<any>(name, ...args);
+        if (!inj) {
+          return undefined;
         }
+      }
 
-        const metadata = Object.assign({}, {
-            class: name
-        }, props || {});
+      const metadata = Object.assign(
+        {},
+        {
+          class: name,
+        },
+        props || {},
+      );
 
-        Reflect.defineMetadata(
-            getInjectKey(InjectablesKeys.INJECTABLE),
-            metadata,
-            inj.constructor
-        );
+      Reflect.defineMetadata(
+        getInjectKey(InjectablesKeys.INJECTABLE),
+        metadata,
+        inj.constructor,
+      );
 
-        return inj;
-    }
+      return inj;
+    };
 
     // copy prototype so instanceof operator still works
     newConstructor.prototype = original.prototype;
     // newConstructor.__proto__ = original.__proto__;
     // Sets the proper constructor name for type verification
     Object.defineProperty(newConstructor, "name", {
-        writable: false,
-        enumerable: true,
-        configurable: false,
-        value: original.prototype.constructor.name
+      writable: false,
+      enumerable: true,
+      configurable: false,
+      value: original.prototype.constructor.name,
     });
     // return new constructor (will override original)
     return newConstructor;
-}
+  };
 
 /**
  * @summary function witch transforms a cached {@link injectable}
@@ -102,50 +112,56 @@ export type InstanceTransformer = (injectable: any, obj: any) => any;
  *
  * @memberOf module:injectable-decorators.Decorators
  */
-export const inject = (category?: string, transformer?: InstanceTransformer) => (target: any, propertyKey: string) => {
-
+export const inject =
+  (category?: string, transformer?: InstanceTransformer) =>
+  (target: any, propertyKey: string) => {
     const values = new WeakMap();
 
-    const name: string | undefined = category || getTypeFromDecorator(target, propertyKey);
-    if (!name)
-        throw new Error(`Could not get Type from decorator`);
+    const name: string | undefined =
+      category || getTypeFromDecorator(target, propertyKey);
+    if (!name) throw new Error(`Could not get Type from decorator`);
 
     Reflect.defineMetadata(
-        getInjectKey(InjectablesKeys.INJECT),
-        {
-            injectable: name
-        },
-        target,
-        propertyKey
+      getInjectKey(InjectablesKeys.INJECT),
+      {
+        injectable: name,
+      },
+      target,
+      propertyKey,
     );
 
     Object.defineProperty(target, propertyKey, {
-        configurable: true,
-        get(this: any){
-            const descriptor: PropertyDescriptor = Object.getOwnPropertyDescriptor(target, propertyKey) as PropertyDescriptor;
-            if (descriptor.configurable){
-                Object.defineProperty(this, propertyKey, {
-                    enumerable: true,
-                    configurable: false,
-                    get(this: any){
-                        let obj = values.get(this);
-                        if (!obj){
-                            obj = Injectables.get(name);
-                            if (!obj)
-                                throw new Error(`Could not get Injectable ${name} to inject in ${target.constructor ? target.constructor.name: target.name}'s ${propertyKey}`)
-                            if (transformer)
-                                try {
-                                    obj = transformer(obj, target)
-                                } catch(e) {
-                                    console.error(e)
-                                }
-                            values.set(this, obj);
-                        }
-                        return obj;
-                    }
-                });
-                return this[propertyKey];
-            }
+      configurable: true,
+      get(this: any) {
+        const descriptor: PropertyDescriptor = Object.getOwnPropertyDescriptor(
+          target,
+          propertyKey,
+        ) as PropertyDescriptor;
+        if (descriptor.configurable) {
+          Object.defineProperty(this, propertyKey, {
+            enumerable: true,
+            configurable: false,
+            get(this: any) {
+              let obj = values.get(this);
+              if (!obj) {
+                obj = Injectables.get(name);
+                if (!obj)
+                  throw new Error(
+                    `Could not get Injectable ${name} to inject in ${target.constructor ? target.constructor.name : target.name}'s ${propertyKey}`,
+                  );
+                if (transformer)
+                  try {
+                    obj = transformer(obj, target);
+                  } catch (e) {
+                    console.error(e);
+                  }
+                values.set(this, obj);
+              }
+              return obj;
+            },
+          });
+          return this[propertyKey];
         }
+      },
     });
-}
+  };

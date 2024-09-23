@@ -11,13 +11,13 @@
  * @memberOf module:injectable-decorators
  */
 
-export * from './constants';
-export * from './decorators';
-export * from './registry';
+export * from "./constants";
+export * from "./decorators";
+export * from "./registry";
 
 /**
  * @summary Defined on library build. holds the library current version
  * @const VERSION
  * @memberOf module:injectable-decorators
  */
-export const VERSION = "##VERSION##"
+export const VERSION = "##VERSION##";

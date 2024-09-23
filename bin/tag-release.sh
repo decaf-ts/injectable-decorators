@@ -1,8 +1,8 @@
-#!/bin/bash
+#!/bin/bash -e
 
 function ask_yes_or_no(){
     # Test if there are enough arguments
-    if [[ $# > 2 ]]; then
+    if [[ $# -gt 2 ]]; then
         exit 1
     fi
 
@@ -18,7 +18,7 @@ function ask_yes_or_no(){
         y|yes) local response="yes" ;;
         *)     local response="no" ;;
     esac
-    if [[ $response == $default ]] || [[ -z $REPLY ]]; then
+    if [[ $response == "$default" ]] || [[ -z $REPLY ]]; then
         echo $default
     else
         echo $response
@@ -43,28 +43,40 @@ function ask(){
     echo "$real_answer"
 }
 
-echo "Listing existing tags..."
-git tag --sort=-taggerdate | head -n 5
+if [[ $# -ne 0 ]];then
+  TAG="$1"
+  if [[ -n "$TAG" ]];then
+    shift
+  fi
 
-TAG=""
-
-while [[ "$TAG" == "" || ! "${TAG}" =~ ^v[0-9]+\.[0-9]+.[0-9]+(\-[0-9a-zA-Z\-]+)?$ ]]; do
-  TAG=$(ask "What should be the new tag? (accepts v*.*.*[-...])")
-done
-
-MESSAGE=$(ask "Tag Message")
+  MESSAGE="$*"
+fi
 
 echo "Preparing Release... "
 npm run prepare-release
+
+if [[ -z "$TAG" ]];then
+  echo "Listing existing tags..."
+  git tag --sort=-taggerdate | head -n 5
+  while [[ "$TAG" == "" || ! "${TAG}" =~ ^v[0-9]+\.[0-9]+.[0-9]+(\-[0-9a-zA-Z\-]+)?$ ]]; do
+    TAG=$(ask "What should be the new tag? (accepts v*.*.*[-...])")
+  done
+fi
+
+if [[ -z "$MESSAGE" ]];then
+  MESSAGE=$(ask "Tag Message")
+fi
 
 if [[ $(git status --porcelain) ]]; then
   git add .
   git commit -m "after release preparation"
 fi
 
-npm version "$TAG"
+npm version "$TAG" -m "$MESSAGE"
 
-git push && git push --tags
+git push --follow-tags
 
-
+if [[ "$MESSAGE" =~ -no-ci$ ]]; then
+  NPM_TOKEN=$(cat .npmtoken) npm publish --access public
+fi
 
