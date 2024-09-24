@@ -13,7 +13,9 @@
 
 export * from "./constants";
 export * from "./decorators";
+export * from "./Injectables";
 export * from "./registry";
+export * from "./utils";
 
 /**
  * @summary Defined on library build. holds the library current version
