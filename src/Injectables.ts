@@ -60,4 +60,18 @@ export class Injectables {
       Injectables.actingInjectablesRegistry = new InjectableRegistryImp();
     return Injectables.actingInjectablesRegistry;
   }
+
+  static reset() {
+    this.setRegistry(new InjectableRegistryImp());
+  }
+
+  static selectiveReset(match: string | RegExp) {
+    const regexp = typeof match === "string" ? new RegExp(match) : match;
+    (Injectables.actingInjectablesRegistry as any)["cache"] = Object.entries(
+      (Injectables.actingInjectablesRegistry as any)["cache"],
+    ).reduce((accum: Record<string, any>, [key, val]) => {
+      if (!key.match(regexp)) accum[key] = val;
+      return accum;
+    }, {});
+  }
 }
