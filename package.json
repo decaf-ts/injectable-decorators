@@ -4,10 +4,10 @@
   "description": "injectable decorators extension for decorator validation",
   "type": "module",
   "exports": {
-    "require": "./lib/index.js",
+    "require": "./lib/index.cjs",
     "import": "./lib/esm/index.js"
   },
-  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
     "do-install": "TOKEN=$(cat .token) npm install",
     "update-dependencies": "rimraf node_modules/@decaf-ts package-lock.json && npm run do-install",
