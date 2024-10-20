@@ -57,6 +57,7 @@ export class InjectableRegistryImp implements InjectablesRegistry {
       if (!innerCache.singleton && !innerCache.instance)
         return this.build<T>(buildDef, ...args);
       return innerCache.instance || this.build<T>(buildDef, ...args);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       return undefined;
     }
@@ -68,14 +69,14 @@ export class InjectableRegistryImp implements InjectablesRegistry {
     obj: Injectable<T>,
     category: string | undefined = undefined,
     isSingleton: boolean = true,
-    force: boolean = false,
+    force: boolean = false
   ): void {
     const castObj: Record<string, any> = obj as Record<string, any>;
 
     const constructor = !castObj.name && castObj.constructor;
     if (typeof castObj !== "function" && !constructor)
       throw new Error(
-        `Injectable registering failed. Missing Class name or constructor`,
+        `Injectable registering failed. Missing Class name or constructor`
       );
 
     const name =
