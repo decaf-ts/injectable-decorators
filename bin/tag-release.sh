@@ -69,7 +69,7 @@ fi
 
 if [[ $(git status --porcelain) ]]; then
   git add .
-  git commit -m "after release preparation"
+  git commit -m "$TAG - $MESSAGE - before release preparation"
 fi
 
 npm version "$TAG" -m "$MESSAGE"

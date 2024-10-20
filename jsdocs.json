@@ -15,48 +15,55 @@
         "include": [
             "./src"
         ],
-        "exclude": [],
+        "exclude": [
+            "cli.(ts|js)"
+        ],
         "includePattern": "\\.(jsx|js|ts|tsx)$"
     },
     "tags": {
         "allowUnknownTags": true,
-        "dictionaries": ["jsdoc","closure"]
+        "dictionaries": [
+            "jsdoc",
+            "closure"
+        ]
     },
     "templates": {
+        "default": {
+            "useLongnameInNav": false
+        },
         "better-docs": {
             "name": "Injectable Decorators",
             "title": "Injectable Decorators",
             "hideGenerator": true,
+            "useLongnameInNav": false,
             "navLinks": [
                 {
-                    "label": "Test Results",
-                    "href": "coverage"
+                    "label": "Test Coverage",
+                    "href": "workdocs/coverage"
                 },
                 {
-                    "label": "Decorator Validaton",
-                    "href": "https://github.com/TiagoVenceslau/decorator-validation#readme"
+                    "label": "Github Repository",
+                    "href": "https://github.com/decaf-ts/injectable-decorators#readme"
                 },
                 {
-                    "label": "Database Decorators",
-                    "href": "https://github.com/TiagoVenceslau/db-decorators#readme"
-                },
-                {
-                    "label": "Gitlab Repository",
-                    "href": "https://github.com/TiagoVenceslau/injectable-decorators#readme"
+                    "label": "Github Profile",
+                    "href": "https://github.com/decaf-ts"
                 }
             ]
         },
         "cleverLinks": true,
         "monospaceLinks": true,
+        "useLongnameInNav": false,
         "search": true
     },
     "opts": {
         "encoding": "utf-8",
+        "useLongnameInNav": false,
         "template": "./node_modules/better-docs",
         "destination": "./docs/",
         "readme": "./README.md",
         "recurse": true,
         "verbose": true,
-        "tutorials": "./workdocs/tutorials"
+        "tutorials": "workdocs/tutorials"
     }
 }
