@@ -21,10 +21,10 @@
     "lint": "eslint .",
     "lint-fix": "eslint --fix ./src/*",
     "test:circular": "dpdm -T --no-warning --no-tree ./src/index.ts",
-    "prepare-release": "npm run lint-fix && npm run build:prod && npm run test && npm run docs",
+    "prepare-release": "npm run lint-fix && npm run build:prod && npm run coverage && npm run docs",
     "release": "./bin/tag-release.sh",
     "clean-publish": "npx clean-publish",
-    "coverage": "npm run test:all && jest-coverage-badges --input \"./workdocs/coverage/coverage-summary.json\" --output \"./workdocs/badges\"",
+    "coverage": "npm run test:all && cd workdocs && jest-coverage-badges",
     "docs": "npx rimraf ./docs && mkdir docs && npm run do-install -- better-docs taffydb && gulp docs; npm remove better-docs taffydb"
   },
   "files": [
@@ -59,6 +59,7 @@
   },
   "homepage": "https://github.com/decaf-ts/injectable-decorators#readme",
   "devDependencies": {
+    "@eslint/js": "^9.13.0",
     "@types/jest": "^29.5.13",
     "@typescript-eslint/eslint-plugin": "^8.10.0",
     "clean-publish": "^5.0.0",
@@ -66,6 +67,7 @@
     "eslint": "^9.13.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
+    "globals": "^15.11.0",
     "gulp": "^5.0.0",
     "gulp-if": "^3.0.0",
     "gulp-rename": "^2.0.0",
