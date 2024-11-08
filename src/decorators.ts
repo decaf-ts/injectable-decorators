@@ -27,9 +27,10 @@ export const injectable =
   (
     category: string | undefined = undefined,
     force: boolean = false,
-    instanceCallback?: (instance: any, ...args: any[]) => void,
+    instanceCallback?: (instance: any, ...args: any[]) => void
   ) =>
-  (original: any) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  (original: any, propertyKey?: any) => {
     const name = category || original.name;
     // the new constructor behaviour
     const newConstructor: any = function (...args: any[]) {
@@ -44,7 +45,7 @@ export const injectable =
             instanceCallback(inj);
           } catch (e: any) {
             console.error(
-              `Failed to call injectable callback for ${name}: ${e}`,
+              `Failed to call injectable callback for ${name}: ${e}`
             );
           }
       }
@@ -53,13 +54,13 @@ export const injectable =
         {},
         {
           class: name,
-        },
+        }
       );
 
       Reflect.defineMetadata(
         getInjectKey(InjectablesKeys.INJECTABLE),
         metadata,
-        inj.constructor,
+        inj.constructor
       );
 
       return inj;
@@ -120,7 +121,7 @@ export type InstanceTransformer = (injectable: any, obj: any) => any;
  */
 export const inject =
   (category?: string, transformer?: InstanceTransformer) =>
-  (target: any, propertyKey: string) => {
+  (target: any, propertyKey?: any) => {
     const values = new WeakMap();
 
     const name: string | undefined =
@@ -133,7 +134,7 @@ export const inject =
         injectable: name,
       },
       target,
-      propertyKey,
+      propertyKey
     );
 
     Object.defineProperty(target, propertyKey, {
@@ -141,7 +142,7 @@ export const inject =
       get(this: any) {
         const descriptor: PropertyDescriptor = Object.getOwnPropertyDescriptor(
           target,
-          propertyKey,
+          propertyKey
         ) as PropertyDescriptor;
         if (descriptor.configurable) {
           Object.defineProperty(this, propertyKey, {
@@ -153,7 +154,7 @@ export const inject =
                 obj = Injectables.get(name);
                 if (!obj)
                   throw new Error(
-                    `Could not get Injectable ${name} to inject in ${target.constructor ? target.constructor.name : target.name}'s ${propertyKey}`,
+                    `Could not get Injectable ${name} to inject in ${target.constructor ? target.constructor.name : target.name}'s ${propertyKey}`
                   );
                 if (transformer)
                   try {
