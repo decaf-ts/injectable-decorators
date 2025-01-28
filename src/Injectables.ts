@@ -62,13 +62,13 @@ export class Injectables {
   }
 
   static reset() {
-    this.setRegistry(new InjectableRegistryImp());
+    Injectables.setRegistry(new InjectableRegistryImp());
   }
 
   static selectiveReset(match: string | RegExp) {
     const regexp = typeof match === "string" ? new RegExp(match) : match;
     (Injectables.actingInjectablesRegistry as any)["cache"] = Object.entries(
-      (Injectables.actingInjectablesRegistry as any)["cache"],
+      (Injectables.actingInjectablesRegistry as any)["cache"]
     ).reduce((accum: Record<string, any>, [key, val]) => {
       if (!key.match(regexp)) accum[key] = val;
       return accum;
