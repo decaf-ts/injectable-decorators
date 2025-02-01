@@ -59,15 +59,15 @@
   },
   "homepage": "https://github.com/decaf-ts/injectable-decorators#readme",
   "devDependencies": {
-    "@eslint/js": "^9.13.0",
-    "@types/jest": "^29.5.13",
-    "@typescript-eslint/eslint-plugin": "^8.10.0",
-    "clean-publish": "^5.0.0",
+    "@eslint/js": "^9.19.0",
+    "@types/jest": "^29.5.14",
+    "@typescript-eslint/eslint-plugin": "^8.22.0",
+    "clean-publish": "^5.1.0",
     "dpdm": "^3.14.0",
-    "eslint": "^9.13.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-prettier": "^5.2.1",
-    "globals": "^15.11.0",
+    "eslint": "^9.19.0",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-prettier": "^5.2.3",
+    "globals": "^15.14.0",
     "gulp": "^5.0.0",
     "gulp-if": "^3.0.0",
     "gulp-rename": "^2.0.0",
@@ -83,19 +83,27 @@
     "jsdoc-mermaid": "^1.0.0",
     "markdown-include": "^0.4.3",
     "merge-stream": "^2.0.0",
-    "nodemon": "^3.1.7",
-    "npm-check-updates": "^17.1.4",
-    "prettier": "^3.3.3",
+    "nodemon": "^3.1.9",
+    "npm-check-updates": "^17.1.14",
+    "prettier": "^3.4.2",
     "rimraf": "^6.0.1",
     "ts-jest": "^29.2.5",
-    "ts-loader": "^9.5.1",
+    "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.6.3",
-    "typescript-eslint": "^8.10.0",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.22.0",
     "vinyl-named": "^1.1.0",
     "webpack-stream": "^7.0.0"
   },
   "peerDependencies": {
     "reflect-metadata": "^0.2.1"
+  },
+  "overrides": {
+    "gulp-run-command": {
+      "cross-spawn": "^7.0.6"
+    },
+    "clean-publish": {
+      "cross-spawn": "^7.0.6"
+    }
   }
 }
