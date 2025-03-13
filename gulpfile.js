@@ -14,7 +14,7 @@ import webpack from "webpack-stream";
 import run from "gulp-run-command";
 import process from "node:process";
 
-import pkg from "./package.json" assert { type: "json" };
+import pkg from "./package.json" with { type: "json" };
 import fs from "fs";
 let { name, version } = pkg;
 
