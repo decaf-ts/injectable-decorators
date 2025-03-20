@@ -132,7 +132,6 @@ function exportDefault(isDev, mode) {
         stream.dts.pipe(dest(destPath)),
         stream.js
           .pipe(gulpIf(!isDev, uglify()))
-          .pipe(gulpIf(isDev, sourcemaps.write()))
           .pipe(
             gulpIf(
               mode === "commonjs",
@@ -141,6 +140,7 @@ function exportDefault(isDev, mode) {
               })
             )
           )
+          .pipe(gulpIf(isDev, sourcemaps.write()))
           .pipe(
             gulpIf(
               mode === "commonjs",
@@ -223,7 +223,7 @@ export const dev = series(
 
 export const prod = series(
   parallel(
-    series(exportDefault(true, "commonjs"), exportDefault(true, "es2022")),
+    series(exportDefault(false, "commonjs"), exportDefault(false, "es2022")),
     exportESMDist(false),
     exportJSDist(false)
   ),
