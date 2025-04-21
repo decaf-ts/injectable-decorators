@@ -8,8 +8,10 @@ export default [
   {
     ignores: [
       "lib",
+      "bin",
       "dist",
       "docs",
+      "gulpfile.js",
       "workdocs",
       "!src/**/*",
       "!tests/**/*",

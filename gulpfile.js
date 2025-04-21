@@ -13,6 +13,7 @@ import replace from "gulp-replace";
 import webpack from "webpack-stream";
 import run from "gulp-run-command";
 import process from "node:process";
+import nodeExternals from "webpack-node-externals";
 
 import pkg from "./package.json" with { type: "json" };
 import fs from "fs";
@@ -24,7 +25,7 @@ const VERSION_STRING = "##VERSION##";
 function patchFiles() {
   const doPatch = (basePath) => {
     return function doPatch() {
-      const jsFiles = [`${basePath}/**/*.js`];
+      const jsFiles = [`${basePath}/**/*.?(c|m)js`];
       return src(jsFiles)
         .pipe(replace(VERSION_STRING, `${version}`))
         .pipe(dest(`${basePath}/`));
@@ -34,10 +35,10 @@ function patchFiles() {
   return series(doPatch("lib"), doPatch("dist"));
 }
 
-function getWebpackConfig(isESM, isDev) {
+function getWebpackConfig(isESM, isDev, isLib, nameOverride = name) {
   const webPackConfig = {
     mode: isDev ? "development" : "production", // can be changed to production to produce minified bundle
-
+    target: "node",
     module: {
       rules: [
         {
@@ -67,12 +68,16 @@ function getWebpackConfig(isESM, isDev) {
         util: false,
       },
     },
-
     output: {
-      filename: `${name}.bundle.${!isDev ? "min." : ""}${isESM ? "esm." : ""}js`,
-      path: path.join(process.cwd(), "./dist/"),
+      filename: `${nameOverride ? nameOverride : `.bundle.${!isDev ? "min" : ""}${isESM ? "esm" : ""}`}.js`,
+      path: path.join(process.cwd(), isLib ? "./bin" : "./dist/"),
     },
   };
+
+  if (isLib) {
+    webPackConfig.externals = [nodeExternals()];
+    webPackConfig.externalsPresets = { node: true };
+  }
 
   if (isESM) webPackConfig.experiments = { outputModule: true };
   else
@@ -105,33 +110,34 @@ function exportDefault(isDev, mode) {
         .pipe(tsProject());
 
       const destPath = `lib${mode === "commonjs" ? "" : "/esm"}`;
+      const typesPath = `dist/types`;
 
       const fixCjsImports = function (match, ...groups) {
         const renamedFile = groups[1] + ".cjs";
         const fileName = groups[1] + ".ts";
-
-        const filePath = path.join(
-          this.file.path.split(name)[0],
-          name,
+        const { base, relative } = this.file;
+        const sourceFilePath = path.join(
+          base,
           "src",
-          this.file.path
-            .split(name)[1]
-            .split("/")
-            .slice(1, this.file.path.split(name)[1].split("/").length - 1)
-            .join("/"),
+          relative.replace(/([^\/]|[\w-_])+?\.cjs$/g, ""),
           fileName
         );
 
-        if (!fs.existsSync(filePath))
-          return groups[0] + groups[1] + "/index.cjs" + groups[2];
+        let result;
+        if (!fs.existsSync(sourceFilePath)) {
+          result = groups[0] + groups[1] + "/index.cjs" + groups[2];
+        } else {
+          result = groups[0] + renamedFile + groups[2];
+        }
 
-        return groups[0] + renamedFile + groups[2];
+        return result;
       };
 
       return merge([
-        stream.dts.pipe(dest(destPath)),
+        stream.dts.pipe(dest(typesPath)),
         stream.js
           .pipe(gulpIf(!isDev, uglify()))
+          .pipe(gulpIf(isDev, sourcemaps.write()))
           .pipe(
             gulpIf(
               mode === "commonjs",
@@ -140,7 +146,6 @@ function exportDefault(isDev, mode) {
               })
             )
           )
-          .pipe(gulpIf(isDev, sourcemaps.write()))
           .pipe(
             gulpIf(
               mode === "commonjs",
@@ -156,11 +161,9 @@ function exportDefault(isDev, mode) {
 }
 
 function exportBundles(isEsm, isDev) {
-  const entryFile = "src/index.ts";
-  return src(entryFile)
-    .pipe(named())
-    .pipe(webpack(getWebpackConfig(isEsm, isDev)))
-    .pipe(dest(`./dist${isEsm ? "/esm" : ""}`));
+  return bundleFromFile("src/index.ts", isEsm, isDev).pipe(
+    dest(`./dist${isEsm ? "/esm" : ""}`)
+  );
 }
 
 function exportESMDist(isDev = false) {
@@ -183,14 +186,21 @@ function makeDocs() {
       );
     };
   };
+  const copyFile = (source, destination) => {
+    return function copyFile() {
+      return src(source, { base: source, encoding: false }).pipe(
+        dest(destination)
+      );
+    };
+  };
 
   function compileReadme() {
-    return run.default("npx markdown-include ./mdCompile.json")();
+    return run.default("npx markdown-include ./workdocs/readme-md.json")();
   }
 
   function compileDocs() {
     return run.default(
-      "npx jsdoc -c jsdocs.json -t ./node_modules/better-docs"
+      "npx jsdoc -c ./workdocs/jsdocs.json -t ./node_modules/better-docs"
     )();
   }
 
@@ -204,12 +214,34 @@ function makeDocs() {
           dest: "./docs/workdocs/assets",
         },
         {
-          src: "workdocs/coverage",
-          dest: "./docs/workdocs/coverage",
+          src: "workdocs/reports/coverage",
+          dest: "./docs/workdocs/reports/coverage",
+        },
+        {
+          src: "workdocs/reports/html",
+          dest: "./docs/workdocs/reports/html",
+        },
+        {
+          src: "workdocs/resources",
+          dest: "./docs/workdocs/resources",
         },
       ].map((e) => copyFiles(e.src, e.dest))
+    ),
+    series(
+      ...[
+        {
+          src: "LICENSE.md",
+          dest: "./docs/LICENSE.md",
+        },
+      ].map((e) => copyFile(e.src, e.dest))
     )
   );
+}
+
+function bundleFromFile(entryFile, isEsm, isDev, isLib) {
+  return src(entryFile)
+    .pipe(named())
+    .pipe(webpack(getWebpackConfig(isEsm, isDev, isLib)));
 }
 
 export const dev = series(

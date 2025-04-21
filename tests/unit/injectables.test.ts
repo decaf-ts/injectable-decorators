@@ -1,167 +1,161 @@
-import {inject, injectable} from "../../src";
-import {Injectables} from "../../src/Injectables";
-import {InjectableRegistryImp} from "../../src";
+import { inject, injectable } from "../../src";
+import { Injectables } from "../../src/Injectables";
+import { InjectableRegistryImp } from "../../src";
 
 @injectable("SomeObject")
-class SomeObject{
-    doSomething(){
-        return 5;
-    }
+class SomeObject {
+  doSomething() {
+    return 5;
+  }
 }
 
 @injectable("SomeOtherObject", true)
-class SomeOtherObject{
-    doSomething(){
-        return 10;
-    }
+class SomeOtherObject {
+  doSomething() {
+    return 10;
+  }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class OtherObject {
-    @inject("SomeObject")
-    object!: SomeObject;
+  @inject("SomeObject")
+  object!: SomeObject;
 
-    constructor() {
-    }
+  constructor() {}
 }
 
+describe(`Injectables`, function () {
+  it(`Instantiates Properly`, function () {
+    const obj: SomeObject = new SomeObject();
+    expect(obj).not.toBeNull();
+    expect(obj.constructor.name).toEqual(SomeObject.name);
+  });
 
-describe(`Injectables`, function(){
+  it(`Registers itself onto the registry upon Instantiation`, function () {
+    const obj: SomeObject = new SomeObject();
+    const repo: SomeObject = Injectables.get(
+      obj.constructor.name
+    ) as SomeObject;
+    expect(obj).toEqual(repo);
+  });
 
-    it(`Instantiates Properly`, function(){
-        const obj: SomeObject = new SomeObject();
-        expect(obj).not.toBeNull();
-        expect(obj.constructor.name).toEqual(SomeObject.name);
-    });
+  it(`Handles more than one Injectable`, function () {
+    const testRepository1: SomeObject = new SomeObject();
+    const testRepository2: SomeOtherObject = new SomeOtherObject();
+    let repo: SomeObject = Injectables.get(
+      testRepository1.constructor.name
+    ) as SomeObject;
+    expect(testRepository1).toEqual(repo);
 
-    it(`Registers itself onto the registry upon Instantiation`, function(){
-        const obj: SomeObject = new SomeObject();
-        const repo: SomeObject = Injectables.get(obj.constructor.name) as SomeObject;
-        expect(obj).toEqual(repo);
-    });
+    repo = Injectables.get(testRepository2.constructor.name) as SomeOtherObject;
+    expect(testRepository2).toEqual(repo);
+  });
 
-    it(`Handles more than one Injectable`, function(){
-        const testRepository1: SomeObject = new SomeObject();
-        const testRepository2: SomeOtherObject = new SomeOtherObject();
-        let repo: SomeObject = Injectables.get(testRepository1.constructor.name) as SomeObject;
-        expect(testRepository1).toEqual(repo);
+  it(`Responds to force`, function () {
+    const testRepository1: SomeOtherObject = new SomeOtherObject();
+    const testRepository2: SomeOtherObject = new SomeOtherObject();
+    let repo: SomeOtherObject = Injectables.get(
+      testRepository1.constructor.name
+    ) as SomeOtherObject;
+    expect(testRepository1).toBe(repo);
 
-        repo = Injectables.get(testRepository2.constructor.name) as SomeOtherObject;
-        expect(testRepository2).toEqual(repo);
-    });
+    repo = Injectables.get(testRepository2.constructor.name) as SomeOtherObject;
+    expect(testRepository2).toBe(repo);
+  });
 
-    it(`Responds to force`, function(){
-        const testRepository1: SomeOtherObject = new SomeOtherObject();
-        const testRepository2: SomeOtherObject = new SomeOtherObject();
-        let repo: SomeOtherObject = Injectables.get(testRepository1.constructor.name) as SomeOtherObject;
-        expect(testRepository1).toBe(repo);
+  it(`Gets Injected Properly`, function () {
+    class Controller {
+      @inject()
+      repo!: SomeOtherObject;
 
-        repo = Injectables.get(testRepository2.constructor.name) as SomeOtherObject;
-        expect(testRepository2).toBe(repo);
-    });
+      constructor() {}
+    }
 
-    it(`Gets Injected Properly`, function(){
-        class Controller{
+    const testController: Controller = new Controller();
 
-            @inject()
-            repo!: SomeOtherObject;
+    expect(testController.repo).toBeDefined();
 
-            constructor(){
-            }
-        }
+    const repo = Injectables.get("SomeOtherObject");
+    expect(testController.repo).toEqual(repo);
+  });
 
-        const testController: Controller = new Controller();
+  it(`Gets transformer Properly`, function () {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const transform = function (el: any) {
+      return "1";
+    };
 
-        expect(testController.repo).toBeDefined();
+    class Controller {
+      @inject(undefined, transform)
+      repo!: SomeOtherObject;
 
-        const repo = Injectables.get("SomeOtherObject");
-        expect(testController.repo).toEqual(repo);
-    });
+      constructor() {}
+    }
 
-    it(`Gets transformer Properly`, function(){
+    const testController: Controller = new Controller();
 
-        const transform = function(el: any){
-            return "1";
-        }
+    expect(testController.repo).toBeDefined();
 
-        class Controller{
+    const repo = Injectables.get("SomeOtherObject");
+    expect(testController.repo).not.toEqual(repo);
+    expect(testController.repo).toEqual("1");
+  });
 
-            @inject(undefined, transform)
-            repo!: SomeOtherObject;
+  it(`Responds to category as an injectable`, function () {
+    class AAA {
+      protected a: string = "aaa";
+    }
 
-            constructor(){
-            }
-        }
+    @injectable("AAA")
+    class BBB extends AAA {
+      protected b: string = "bbb";
+    }
 
-        const testController: Controller = new Controller();
+    const b = new BBB();
 
-        expect(testController.repo).toBeDefined();
+    class Controller {
+      @inject()
+      repo!: AAA;
 
-        const repo = Injectables.get("SomeOtherObject");
-        expect(testController.repo).not.toEqual(repo);
-        expect(testController.repo).toEqual("1");
-    });
+      constructor() {}
+    }
 
-    it(`Responds to category as an injectable`, function(){
+    const testController: Controller = new Controller();
 
-        class AAA {
-            protected a: string = "aaa"
-        }
+    expect(testController.repo).toBeDefined();
 
-        @injectable("AAA")
-        class BBB extends AAA{
-            protected b: string = "bbb"
-        }
+    expect(testController.repo).toBe(b);
+  });
 
-        const b = new BBB();
+  it(`Responds to category while injected`, function () {
+    class AAA {
+      protected a: string = "aaa";
+    }
 
-        class Controller{
+    @injectable("AAA")
+    class BBB extends AAA {
+      protected b: string = "bbb";
+    }
 
-            @inject()
-            repo!: AAA;
+    const b = new BBB();
 
-            constructor(){
-            }
-        }
+    class Controller {
+      @inject("AAA")
+      repo!: BBB;
 
-        const testController: Controller = new Controller();
+      constructor() {}
+    }
 
-        expect(testController.repo).toBeDefined();
+    const testController: Controller = new Controller();
 
-        expect(testController.repo).toBe(b);
-    });
+    expect(testController.repo).toBeDefined();
 
-    it(`Responds to category while injected`, function(){
+    expect(testController.repo).toBe(b);
+  });
 
-        class AAA {
-            protected a: string = "aaa"
-        }
-
-        @injectable("AAA")
-        class BBB extends AAA{
-            protected b: string = "bbb"
-        }
-
-        const b = new BBB();
-
-        class Controller{
-
-            @inject("AAA")
-            repo!: BBB;
-
-            constructor(){
-            }
-        }
-
-        const testController: Controller = new Controller();
-
-        expect(testController.repo).toBeDefined();
-
-        expect(testController.repo).toBe(b);
-    });
-
-    it("Changes Registry", () => {
-        expect(Injectables.get("SomeOtherObject")).toBeDefined();
-        Injectables.setRegistry(new InjectableRegistryImp())
-        expect(Injectables.get("SomeOtherObject")).not.toBeDefined();
-    })
+  it("Changes Registry", () => {
+    expect(Injectables.get("SomeOtherObject")).toBeDefined();
+    Injectables.setRegistry(new InjectableRegistryImp());
+    expect(Injectables.get("SomeOtherObject")).not.toBeDefined();
+  });
 });
