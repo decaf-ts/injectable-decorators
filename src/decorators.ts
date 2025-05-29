@@ -3,34 +3,61 @@ import { Injectables } from "./Injectables";
 import { getTypeFromDecorator } from "./utils";
 
 /**
- * @summary Return the reflection key for injectables
- *
- * @param {string} key
+ * @description Generates a fully qualified reflection metadata key.
+ * @summary Returns the reflection key for injectables by prefixing the provided key with the base reflection key.
+ * @param {string} key The key to be prefixed
+ * @return {string} The fully qualified reflection key
  * @function getInjectKey
- *
  * @memberOf module:injectable-decorators
  */
 const getInjectKey = (key: string) => InjectablesKeys.REFLECT + key;
 
 /**
- * @summary Defines a class as an injectable
+ * @description Decorator that marks a class as available for dependency injection.
+ * @summary Defines a class as an injectable singleton that can be retrieved from the registry.
+ * When applied to a class, replaces its constructor with one that returns a singleton instance.
  *
- * @param {string} [category] defaults to the class Name. (Useful when minification occours and names are changed so we can no longer rely on the class name, or when we want to upcast the Object)
- * @param {boolean} [force] defines if the injectable should override the already existing instance (if any). (only meant for extending decorators
- * @param instanceCallback
+ * @param {string} [category] Defaults to the class name. Useful when minification occurs and names are changed,
+ * or when you want to upcast the object to a different type.
+ * @param {boolean} [force] Defines if the injectable should override an already existing instance (if any).
+ * Only meant for extending decorators.
+ * @param {Function} [instanceCallback] Optional callback function that will be called with the instance after creation.
+ * @return {Function} A decorator function that transforms the class into an injectable.
  *
  * @function injectable
+ * @category Class Decorators
  *
- * @memberOf module:injectable-decorators.Decorators
+ * @mermaid
+ * sequenceDiagram
+ *   participant Client
+ *   participant Decorator
+ *   participant Injectables
+ *
+ *   Client->>Decorator: @injectable()
+ *   Decorator->>Decorator: Create new constructor
+ *
+ *   Note over Decorator: When new instance requested
+ *   Decorator->>Injectables: get(name)
+ *   alt Instance exists
+ *     Injectables-->>Decorator: Return existing instance
+ *   else No instance
+ *     Decorator->>Injectables: register(original, name)
+ *     Decorator->>Injectables: get(name)
+ *     Injectables-->>Decorator: Return new instance
+ *     opt Has callback
+ *       Decorator->>Decorator: Call instanceCallback
+ *     end
+ *   end
+ *   Decorator->>Decorator: Define metadata
+ *   Decorator-->>Client: Return instance
  */
-export const injectable =
-  (
-    category: string | undefined = undefined,
-    force: boolean = false,
-    instanceCallback?: (instance: any, ...args: any[]) => void
-  ) =>
+export function injectable(
+  category: string | undefined = undefined,
+  force: boolean = false,
+  instanceCallback?: (instance: any, ...args: any[]) => void
+) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  (original: any, propertyKey?: any) => {
+  return (original: any, propertyKey?: any) => {
     const name = category || original.name;
     // the new constructor behaviour
     const newConstructor: any = function (...args: any[]) {
@@ -79,22 +106,24 @@ export const injectable =
     // return new constructor (will override original)
     return newConstructor;
   };
-
+}
 /**
- * @summary function witch transforms a cached {@link injectable}
+ * @description Function type for transforming injectable instances before they're injected.
+ * @summary Function which transforms a cached {@link injectable} instance before it's injected into a target object.
  *
- * @param {any} injectable
- * @param {any} obj the obj the injectable will be injected on
+ * @param {any} injectable The injectable instance to transform
+ * @param {any} obj The object the injectable will be injected on
+ * @return {any} The transformed injectable instance
  *
+ * @typedef {Function} InstanceTransformer
  * @memberOf module:injectable-decorators
  */
 export type InstanceTransformer = (injectable: any, obj: any) => any;
 
 /**
- * @summary Allows for the injection of an {@link injectable} decorated dependency
- * @description the property must be typed for the requested dependency.
- *
- * Only concrete classes. No generics are supported
+ * @description Property decorator that injects a dependency into a class property.
+ * @summary Allows for the injection of an {@link injectable} decorated dependency into a class property.
+ * The property must be typed for the requested dependency. Only concrete classes are supported; generics are not.
  *
  * Injected properties should be described like so:
  * <pre>
@@ -109,19 +138,49 @@ export type InstanceTransformer = (injectable: any, obj: any) => any;
  * </pre>
  *
  * where InjectableClass is the class you want to inject.
- * Notice the use of '!:' to ensure the transpiler the property will be set outside the constructor but will always be defined
- * For project where minification occours, you should use the category param to ensure the name is the same throughout
+ * Notice the use of '!:' to ensure the transpiler the property will be set outside the constructor but will always be defined.
+ * For projects where minification occurs, you should use the category param to ensure the name is the same throughout.
  *
- * @param {string} [category] defaults to the class Name. (Useful when minification occours and names are changed so we can no longer rely on the class name, or when we want to upcast the Object)
- * @param {InstanceTransformer} [transformer]
+ * @param {string} [category] Defaults to the class name derived from the property type. Useful when minification occurs
+ * and names are changed, or when you want to upcast the object to a different type.
+ * @param {InstanceTransformer} [transformer] Optional function to transform the injectable instance before it's injected.
+ * @return {Function} A property decorator function that sets up the dependency injection.
  *
  * @function inject
+ * @category Property Decorators
  *
- * @memberOf module:injectable-decorators.Decorators
+ * @mermaid
+ * sequenceDiagram
+ *   participant Client
+ *   participant Decorator
+ *   participant Injectables
+ *
+ *   Client->>Decorator: @inject()
+ *   Decorator->>Decorator: Get type from property
+ *   Decorator->>Decorator: Define metadata
+ *   Decorator->>Decorator: Define property getter
+ *
+ *   Note over Decorator: When property accessed
+ *   Client->>Decorator: access property
+ *   Decorator->>Decorator: Check if instance exists
+ *   alt Instance exists in WeakMap
+ *     Decorator-->>Client: Return cached instance
+ *   else No instance
+ *     Decorator->>Injectables: get(name)
+ *     alt Injectable found
+ *       Injectables-->>Decorator: Return injectable instance
+ *       opt Has transformer
+ *         Decorator->>Decorator: Call transformer
+ *       end
+ *       Decorator->>Decorator: Store in WeakMap
+ *       Decorator-->>Client: Return instance
+ *     else No injectable
+ *       Decorator-->>Client: Throw error
+ *     end
+ *   end
  */
-export const inject =
-  (category?: string, transformer?: InstanceTransformer) =>
-  (target: any, propertyKey?: any) => {
+export function inject(category?: string, transformer?: InstanceTransformer) {
+  return (target: any, propertyKey?: any) => {
     const values = new WeakMap();
 
     const name: string | undefined =
@@ -172,3 +231,4 @@ export const inject =
       },
     });
   };
+}

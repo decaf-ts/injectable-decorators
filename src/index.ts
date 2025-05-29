@@ -1,14 +1,10 @@
 /**
+ * @description A lightweight dependency injection library for TypeScript applications.
  * @summary Adds a simple Injectables implementation to create singleton instances of an object
- * and easily inject it into other objects
+ * and easily inject it into other objects. Provides decorators for marking classes as injectable
+ * and for injecting dependencies into class properties.
  *
  * @module injectable-decorators
- */
-
-/**
- * @summary functions that decorate classes or class properties
- * @namespace Decorators
- * @memberOf module:injectable-decorators
  */
 
 export * from "./constants";
@@ -18,7 +14,8 @@ export * from "./registry";
 export * from "./utils";
 
 /**
- * @summary Defined on library build. holds the library current version
+ * @description Current version of the injectable-decorators library.
+ * @summary Defined on library build. Holds the library's current version string.
  * @const VERSION
  * @memberOf module:injectable-decorators
  */

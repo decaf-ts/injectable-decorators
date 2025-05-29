@@ -1,48 +1,95 @@
 /**
- * @summary defines an Injectable type
+ * @description Type representing either a class constructor or an instance.
+ * @summary Defines an Injectable type that can be either a class constructor or an instance of a class.
+ * @template T The type of the injectable object
+ * @typedef {function(any): T | T} Injectable
  * @memberOf module:injectable-decorators
  */
 export type Injectable<T> = { new (...args: any[]): T } | T;
 
 /**
- * @summary Interface for an injectable registry
- * @interface InjectableRegistry
+ * @description Contract for a registry that manages injectable objects.
+ * @summary Interface for an injectable registry that provides methods for retrieving, registering, and building injectable objects.
+ * @template T Type parameter used in the interface methods
+ * @interface InjectablesRegistry
+ * @memberOf module:injectable-decorators
  */
 export interface InjectablesRegistry {
   /**
-   * @summary retrieves an {@link Injectable}
-   * @param {string} name
-   * @param {any[]} args
-   * @return {Injectable | undefined}
-   *
-   * @method
+   * @description Fetches an injectable instance by its registered name.
+   * @summary Retrieves an {@link Injectable} from the registry by name, optionally passing constructor arguments.
+   * @template T Type of the injectable object to retrieve
+   * @param {string} name The registered name of the injectable to retrieve
+   * @param {any[]} args Constructor arguments to pass when instantiating the injectable
+   * @return {Injectable<T> | undefined} The injectable instance or undefined if not found
+   * @memberOf module:injectable-decorators
    */
   get<T>(name: string, ...args: any[]): Injectable<T> | undefined;
 
   /**
-   * @summary registers an injectable constructor
-   * @param {Injectable} constructor
-   * @param {any[]} args
-   *
-   * @method
+   * @description Adds a class or object to the injectable registry.
+   * @summary Registers an injectable constructor or instance with the registry, making it available for injection.
+   * @template T Type of the injectable object to register
+   * @param {Injectable<T>} constructor The class constructor or object instance to register
+   * @param {any[]} args Additional arguments for registration (category, singleton flag, etc.)
+   * @return {void}
+   * @memberOf module:injectable-decorators
    */
   register<T>(constructor: Injectable<T>, ...args: any[]): void;
 
   /**
-   * @summary Instantiates an Injectable
-   * @param {Record<string, any>} obj
-   * @param {any[]} args
-   * @return T
-   *
-   * @method
+   * @description Creates a new instance of an injectable class.
+   * @summary Instantiates an injectable class using its constructor and the provided arguments.
+   * @template T Type of the object to build
+   * @param {Record<string, any>} obj Object containing the name of the injectable to build
+   * @param {any[]} args Constructor arguments to pass when instantiating the injectable
+   * @return {T} The newly created instance
+   * @memberOf module:injectable-decorators
    */
   build<T>(obj: Record<string, any>, ...args: any[]): T;
 }
 
 /**
- * @summary Holds the vairous {@link Injectable}s
+ * @description Default implementation of the InjectablesRegistry interface.
+ * @summary Holds the various {@link Injectable}s in a cache and provides methods to register, retrieve, and build them.
+ * @template T Type parameter used in the class methods
+ *
  * @class InjectableRegistryImp
  * @implements InjectablesRegistry
+ *
+ * @memberOf module:injectable-decorators
+ *
+ * @example
+ * // Create a new registry
+ * const registry = new InjectableRegistryImp();
+ *
+ * // Register a class
+ * class MyService {
+ *   doSomething() {
+ *     return 'Hello World';
+ *   }
+ * }
+ * registry.register(MyService, 'MyService', true);
+ *
+ * // Get the instance
+ * const service = registry.get('MyService');
+ * service.doSomething(); // 'Hello World'
+ *
+ * @mermaid
+ * sequenceDiagram
+ *   participant Client
+ *   participant Registry
+ *
+ *   Client->>Registry: register(MyService)
+ *   Registry->>Registry: Store in cache
+ *
+ *   Client->>Registry: get("MyService")
+ *   alt Instance exists and is singleton
+ *     Registry-->>Client: Return cached instance
+ *   else No instance or not singleton
+ *     Registry->>Registry: build(name)
+ *     Registry-->>Client: Return new instance
+ *   end
  */
 export class InjectableRegistryImp implements InjectablesRegistry {
   private cache: { [indexer: string]: any } = {};
