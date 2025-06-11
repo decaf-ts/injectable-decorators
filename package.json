@@ -59,8 +59,8 @@
     "id",
     "timestamp"
   ],
-  "author": "decaf-ts",
-  "license": "LGPL-3.0-or-later",
+  "author": "Tiago Venceslau",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/decaf-ts/injectable-decorators/issues"
   },
