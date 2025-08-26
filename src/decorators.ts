@@ -61,21 +61,8 @@ export function injectable(
     const name = category || original.name;
     // the new constructor behaviour
     const newConstructor: any = function (...args: any[]) {
-      let inj: any = Injectables.get<any>(name, ...args);
-      if (!inj) {
-        Injectables.register(original, name, true, force);
-        inj = Injectables.get<any>(name, ...args);
-        if (!inj) return undefined;
-
-        if (instanceCallback)
-          try {
-            instanceCallback(inj);
-          } catch (e: any) {
-            console.error(
-              `Failed to call injectable callback for ${name}: ${e}`
-            );
-          }
-      }
+      const inj: any = Injectables.get<any>(name, ...args);
+      if (!inj) return undefined;
 
       const metadata = Object.assign(
         {},
@@ -103,6 +90,8 @@ export function injectable(
       configurable: false,
       value: original.prototype.constructor.name,
     });
+
+    Injectables.register(newConstructor, name, true, force);
     // return new constructor (will override original)
     return newConstructor;
   };
