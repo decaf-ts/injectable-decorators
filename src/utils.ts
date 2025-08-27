@@ -1,4 +1,6 @@
 import "reflect-metadata";
+import { getInjectKey } from "./decorators";
+import { InjectablesKeys } from "./constants";
 
 /**
  * @description Reflection metadata key for accessing TypeScript type information.
@@ -19,8 +21,18 @@ export const TypeKey = "design:type";
  */
 export function getTypeFromDecorator(
   model: any,
-  propKey: string | symbol,
-): string | undefined {
+  propKey: string | symbol
+): symbol | undefined {
   const typeDef = Reflect.getMetadata(TypeKey, model, propKey);
-  return typeDef.name !== "Function" ? typeDef.name : undefined;
+  if (typeDef.name === "Function") {
+    return undefined;
+  }
+  const meta = Reflect.getMetadata(
+    getInjectKey(InjectablesKeys.INJECTABLE),
+    typeDef
+  );
+  if (!meta) {
+    return undefined;
+  }
+  return meta.symbol;
 }

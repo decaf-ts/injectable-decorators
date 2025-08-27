@@ -1,3 +1,7 @@
+import { InjectableDef, InjectableOptions } from "./types";
+import { InjectablesKeys } from "./constants";
+import { getInjectKey } from "./decorators";
+
 /**
  * @description Type representing either a class constructor or an instance.
  * @summary Defines an Injectable type that can be either a class constructor or an instance of a class.
@@ -19,34 +23,43 @@ export interface InjectablesRegistry {
    * @description Fetches an injectable instance by its registered name.
    * @summary Retrieves an {@link Injectable} from the registry by name, optionally passing constructor arguments.
    * @template T Type of the injectable object to retrieve
-   * @param {string} name The registered name of the injectable to retrieve
+   * @param {symbol} name The registered name of the injectable to retrieve
    * @param {any[]} args Constructor arguments to pass when instantiating the injectable
    * @return {Injectable<T> | undefined} The injectable instance or undefined if not found
    * @memberOf module:injectable-decorators
    */
-  get<T>(name: string, ...args: any[]): Injectable<T> | undefined;
+  get<T>(
+    name: symbol | string | { new (...args: any[]): T },
+    ...args: any[]
+  ): T | undefined;
 
   /**
    * @description Adds a class or object to the injectable registry.
    * @summary Registers an injectable constructor or instance with the registry, making it available for injection.
    * @template T Type of the injectable object to register
    * @param {Injectable<T>} constructor The class constructor or object instance to register
+   * @param options
    * @param {any[]} args Additional arguments for registration (category, singleton flag, etc.)
    * @return {void}
    * @memberOf module:injectable-decorators
    */
-  register<T>(constructor: Injectable<T>, ...args: any[]): void;
+  register<T>(
+    constructor: Injectable<T>,
+    category: symbol | undefined,
+    options: InjectableOptions<T>,
+    ...args: any[]
+  ): void;
 
   /**
    * @description Creates a new instance of an injectable class.
    * @summary Instantiates an injectable class using its constructor and the provided arguments.
    * @template T Type of the object to build
-   * @param {Record<string, any>} obj Object containing the name of the injectable to build
+   * @param {symbol} name Object containing the name of the injectable to build
    * @param {any[]} args Constructor arguments to pass when instantiating the injectable
    * @return {T} The newly created instance
    * @memberOf module:injectable-decorators
    */
-  build<T>(obj: Record<string, any>, ...args: any[]): T;
+  build<T>(name: symbol, ...args: any[]): T;
 }
 
 /**
@@ -92,30 +105,45 @@ export interface InjectablesRegistry {
  *   end
  */
 export class InjectableRegistryImp implements InjectablesRegistry {
-  private cache: { [indexer: string]: any } = {};
+  private cache: Record<symbol, InjectableDef> = {};
+
+  has<T>(name: symbol | { new (...args: any[]): T }): boolean {
+    if (typeof name === "symbol") return name in this.cache;
+    return Symbol.for(name.toString()) in this.cache;
+  }
 
   /**
    * @inheritDoc
    */
-  get<T>(name: string, ...args: any[]): T | undefined {
-    try {
-      const innerCache = this.cache[name];
-      const buildDef = { name: name };
-      if (!innerCache.singleton && !innerCache.instance)
-        return this.build<T>(buildDef, ...args);
-      return innerCache.instance || this.build<T>(buildDef, ...args);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (e) {
+  get<T>(
+    name: symbol | string | { new (...args: any[]): T },
+    ...args: any[]
+  ): T | undefined {
+    if (typeof name === "string") name = Symbol.for(name);
+    if (typeof name !== "symbol") {
+      const meta = Reflect.getMetadata(
+        getInjectKey(InjectablesKeys.INJECTABLE),
+        name
+      );
+      name = (meta?.symbol as symbol) || Symbol.for(name.toString());
+    }
+    if (!name) throw new Error(`Injectable ${name} not found`);
+
+    if (!((name as symbol) in this.cache)) {
       return undefined;
     }
+    const cache = this.cache[name];
+    if (!cache.options.singleton && !cache.instance)
+      return this.build<T>(name, ...args);
+    return cache.instance || this.build<T>(name, ...args);
   }
   /**
    * @inheritDoc
    */
   register<T>(
     obj: Injectable<T>,
-    category: string | undefined = undefined,
-    isSingleton: boolean = true,
+    category: symbol | undefined,
+    options: InjectableOptions<T>,
     force: boolean = false
   ): void {
     const castObj: Record<string, any> = obj as Record<string, any>;
@@ -126,30 +154,30 @@ export class InjectableRegistryImp implements InjectablesRegistry {
         `Injectable registering failed. Missing Class name or constructor`
       );
 
-    const name =
-      category ||
-      (constructor && constructor.name && constructor.name !== "Function"
-        ? (constructor as { [indexer: string]: any }).name
-        : castObj.name);
+    const name = category || Symbol.for((obj as any).toString());
 
     if (!this.cache[name] || force)
       this.cache[name] = {
         instance: constructor ? obj : undefined,
-        constructor: !constructor ? obj : undefined,
-        singleton: isSingleton,
+        constructor: !constructor ? obj : (obj as any).constructor,
+        options: options,
       };
   }
   /**
    * @inheritDoc
    */
-  build<T>(defs: { name: string }, ...args: any[]): T {
-    const { constructor, singleton } = this.cache[defs.name];
-    const instance = new constructor(...args);
-    this.cache[defs.name] = {
-      instance: instance,
-      constructor: constructor,
-      singleton: singleton,
-    };
+  build<T>(name: symbol, ...args: any[]): T {
+    const { constructor, options } = this.cache[name];
+    let instance: T;
+    try {
+      instance = new constructor(...args);
+    } catch (e: unknown) {
+      throw new Error(
+        `failed to build ${name.toString()} with args ${args}: ${e}`
+      );
+    }
+    this.cache[name].instance = instance;
+    if (options.callback) instance = options.callback(instance, ...args);
     return instance;
   }
 }

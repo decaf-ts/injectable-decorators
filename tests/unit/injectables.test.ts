@@ -2,15 +2,35 @@ import { inject, injectable } from "../../src";
 import { Injectables } from "../../src/Injectables";
 import { InjectableRegistryImp } from "../../src";
 
-@injectable("SomeObject")
-class SomeObject {
+const mock = jest.fn();
+
+@injectable()
+class InitialObject {
+  constructor() {
+    mock("InitialObject");
+  }
+
   doSomething() {
     return 5;
   }
 }
 
-@injectable("SomeOtherObject", true)
+@injectable("SomeObject")
+class SomeObject {
+  constructor() {
+    mock("SomeObject");
+  }
+
+  doSomething() {
+    return 5;
+  }
+}
+
+@injectable("SomeOtherObject")
 class SomeOtherObject {
+  constructor() {
+    mock("SomeOtherObject");
+  }
   doSomething() {
     return 10;
   }
@@ -25,48 +45,45 @@ class OtherObject {
 }
 
 describe(`Injectables`, function () {
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+  it(`Instantiates Properly Initial Object`, function () {
+    const obj: InitialObject = new InitialObject();
+    expect(obj).not.toBeNull();
+    expect(obj.constructor.name).toEqual(InitialObject.name);
+    expect(mock).toHaveBeenCalled();
+    expect(mock).toHaveBeenCalledWith("InitialObject");
+  });
+
   it(`Instantiates Properly`, function () {
     const obj: SomeObject = new SomeObject();
     expect(obj).not.toBeNull();
     expect(obj.constructor.name).toEqual(SomeObject.name);
+    expect(mock).toHaveBeenCalled();
+    expect(mock).toHaveBeenCalledWith("SomeObject");
   });
 
   it(`Registers itself onto the registry upon Instantiation`, function () {
     const obj: SomeObject = new SomeObject();
-    const repo: SomeObject = Injectables.get(
-      obj.constructor.name
-    ) as SomeObject;
+    const repo: SomeObject = Injectables.get(SomeObject);
     expect(obj).toEqual(repo);
   });
 
   it(`Handles more than one Injectable`, function () {
     const testRepository1: SomeObject = new SomeObject();
     const testRepository2: SomeOtherObject = new SomeOtherObject();
-    let repo: SomeObject = Injectables.get(
-      testRepository1.constructor.name
-    ) as SomeObject;
+    let repo: SomeObject = Injectables.get(SomeObject);
     expect(testRepository1).toEqual(repo);
 
-    repo = Injectables.get(testRepository2.constructor.name) as SomeOtherObject;
+    repo = Injectables.get(SomeOtherObject);
     expect(testRepository2).toEqual(repo);
-  });
-
-  it(`Responds to force`, function () {
-    const testRepository1: SomeOtherObject = new SomeOtherObject();
-    const testRepository2: SomeOtherObject = new SomeOtherObject();
-    let repo: SomeOtherObject = Injectables.get(
-      testRepository1.constructor.name
-    ) as SomeOtherObject;
-    expect(testRepository1).toBe(repo);
-
-    repo = Injectables.get(testRepository2.constructor.name) as SomeOtherObject;
-    expect(testRepository2).toBe(repo);
   });
 
   it(`Gets Injected Properly`, function () {
     class Controller {
       @inject()
-      repo!: SomeOtherObject;
+      repo!: InitialObject;
 
       constructor() {}
     }
@@ -75,7 +92,7 @@ describe(`Injectables`, function () {
 
     expect(testController.repo).toBeDefined();
 
-    const repo = Injectables.get("SomeOtherObject");
+    const repo = Injectables.get(InitialObject);
     expect(testController.repo).toEqual(repo);
   });
 
@@ -96,12 +113,13 @@ describe(`Injectables`, function () {
 
     expect(testController.repo).toBeDefined();
 
-    const repo = Injectables.get("SomeOtherObject");
+    const repo = Injectables.get(SomeOtherObject);
     expect(testController.repo).not.toEqual(repo);
     expect(testController.repo).toEqual("1");
   });
 
   it(`Responds to category as an injectable`, function () {
+    @injectable()
     class AAA {
       protected a: string = "aaa";
     }
@@ -128,20 +146,20 @@ describe(`Injectables`, function () {
   });
 
   it(`Responds to category while injected`, function () {
-    class AAA {
+    class DDD {
       protected a: string = "aaa";
     }
 
-    @injectable("AAA")
-    class BBB extends AAA {
-      protected b: string = "bbb";
+    @injectable("EEE")
+    class CCC extends DDD {
+      protected b: string = "bbbdsad";
     }
 
-    const b = new BBB();
+    const b = new CCC();
 
     class Controller {
-      @inject("AAA")
-      repo!: BBB;
+      @inject("EEE")
+      repo!: CCC;
 
       constructor() {}
     }

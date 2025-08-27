@@ -1,6 +1,11 @@
 import { InjectablesKeys } from "./constants";
 import { Injectables } from "./Injectables";
 import { getTypeFromDecorator } from "./utils";
+import {
+  InjectableMetadata,
+  InjectableOptions,
+  InstanceCallback,
+} from "./types";
 
 /**
  * @description Generates a fully qualified reflection metadata key.
@@ -10,7 +15,7 @@ import { getTypeFromDecorator } from "./utils";
  * @function getInjectKey
  * @memberOf module:injectable-decorators
  */
-const getInjectKey = (key: string) => InjectablesKeys.REFLECT + key;
+export const getInjectKey = (key: string) => InjectablesKeys.REFLECT + key;
 
 /**
  * @description Decorator that marks a class as available for dependency injection.
@@ -53,31 +58,25 @@ const getInjectKey = (key: string) => InjectablesKeys.REFLECT + key;
  */
 export function injectable(
   category: string | undefined = undefined,
-  force: boolean = false,
-  instanceCallback?: (instance: any, ...args: any[]) => void
+  instanceCallback?: InstanceCallback<any>
 ) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  return (original: any, propertyKey?: any) => {
+  return (original: any) => {
+    const symbol = Symbol.for(category || original.toString());
     const name = category || original.name;
+
+    const metadata: InjectableMetadata = {
+      class: name,
+      symbol: symbol,
+    };
+
+    Reflect.defineMetadata(
+      getInjectKey(InjectablesKeys.INJECTABLE),
+      metadata,
+      original
+    );
     // the new constructor behaviour
     const newConstructor: any = function (...args: any[]) {
-      const inj: any = Injectables.get<any>(name, ...args);
-      if (!inj) return undefined;
-
-      const metadata = Object.assign(
-        {},
-        {
-          class: name,
-        }
-      );
-
-      Reflect.defineMetadata(
-        getInjectKey(InjectablesKeys.INJECTABLE),
-        metadata,
-        inj.constructor
-      );
-
-      return inj;
+      return Injectables.get<any>(symbol, ...args);
     };
 
     // copy prototype so instanceof operator still works
@@ -91,7 +90,18 @@ export function injectable(
       value: original.prototype.constructor.name,
     });
 
-    Injectables.register(newConstructor, name, true, force);
+    const opts: InjectableOptions<any> = {
+      singleton: true,
+      callback: instanceCallback as InstanceCallback<any>,
+    };
+
+    Reflect.defineMetadata(
+      getInjectKey(InjectablesKeys.INJECTABLE),
+      metadata,
+      newConstructor
+    );
+
+    Injectables.register(original, symbol, opts);
     // return new constructor (will override original)
     return newConstructor;
   };
@@ -168,13 +178,21 @@ export type InstanceTransformer = (injectable: any, obj: any) => any;
  *     end
  *   end
  */
-export function inject(category?: string, transformer?: InstanceTransformer) {
+export function inject(
+  category?: symbol | string | { new (...args: any[]): any },
+  transformer?: InstanceTransformer
+) {
   return (target: any, propertyKey?: any) => {
     const values = new WeakMap();
 
-    const name: string | undefined =
-      category || getTypeFromDecorator(target, propertyKey);
-    if (!name) throw new Error(`Could not get Type from decorator`);
+    const name: symbol | undefined = category
+      ? typeof category === "symbol"
+        ? category
+        : Symbol.for(category.toString())
+      : getTypeFromDecorator(target, propertyKey);
+    if (!name) {
+      throw new Error(`Could not get Type from decorator`);
+    }
 
     Reflect.defineMetadata(
       getInjectKey(InjectablesKeys.INJECT),
@@ -202,7 +220,7 @@ export function inject(category?: string, transformer?: InstanceTransformer) {
                 obj = Injectables.get(name);
                 if (!obj)
                   throw new Error(
-                    `Could not get Injectable ${name} to inject in ${target.constructor ? target.constructor.name : target.name}'s ${propertyKey}`
+                    `Could not get Injectable ${name.toString()} to inject in ${target.constructor ? target.constructor.name : target.name}'s ${propertyKey}`
                   );
                 if (transformer)
                   try {
