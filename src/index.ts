@@ -11,6 +11,7 @@ export * from "./constants";
 export * from "./decorators";
 export * from "./Injectables";
 export * from "./registry";
+export * from "./types";
 export * from "./utils";
 
 /**

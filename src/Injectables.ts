@@ -3,15 +3,16 @@ import {
   InjectableRegistryImp,
   InjectablesRegistry,
 } from "./registry";
+import { InjectableOptions } from "./types";
 
 /**
  * @description Central registry for managing injectable dependencies.
  * @summary Static class holding the access to the injectables functions. Provides methods for registering,
  * retrieving, and building injectable objects.
  * @template T Type of the injectable object
- * 
+ *
  * @class Injectables
- * 
+ *
  * @example
  * // Define an injectable class
  * @injectable()
@@ -20,27 +21,27 @@ import {
  *     return 'Hello World';
  *   }
  * }
- * 
+ *
  * // Inject the service into another class
  * class MyComponent {
  *   @inject()
  *   private service!: MyService;
- *   
+ *
  *   useService() {
  *     return this.service.doSomething();
  *   }
  * }
- * 
+ *
  * @mermaid
  * sequenceDiagram
  *   participant Client
  *   participant Injectables
  *   participant Registry
- *   
+ *
  *   Client->>Injectables: register(MyService)
  *   Injectables->>Registry: register(MyService)
  *   Registry-->>Injectables: void
- *   
+ *
  *   Client->>Injectables: get("MyService")
  *   Injectables->>Registry: get("MyService")
  *   Registry-->>Injectables: MyService instance
@@ -60,7 +61,10 @@ export class Injectables {
    * @param {any[]} args Constructor arguments to pass when instantiating the injectable
    * @return {Injectable<T> | undefined} The injectable instance or undefined if not found
    */
-  static get<T>(name: string, ...args: any[]): Injectable<T> | undefined {
+  static get<T>(
+    name: symbol | string | { new (...args: any[]): T },
+    ...args: any[]
+  ): T | undefined {
     return Injectables.getRegistry().get(name, ...args);
   }
 
@@ -73,19 +77,22 @@ export class Injectables {
    * @return {void}
    */
   static register<T>(constructor: Injectable<T>, ...args: any[]): void {
-    return Injectables.getRegistry().register(constructor, ...args);
+    return Injectables.getRegistry().register(
+      constructor,
+      ...(args as [symbol, InjectableOptions<T>])
+    );
   }
 
   /**
    * @description Creates a new instance of an injectable class.
    * @summary Instantiates an injectable class using its constructor and the provided arguments.
    * @template T Type of the object to build
-   * @param {Record<string, any>} obj Object containing the name of the injectable to build
+   * @param {symbol} name symbol referencing the injectable
    * @param {any[]} args Constructor arguments to pass when instantiating the injectable
    * @return {T} The newly created instance
    */
-  static build<T>(obj: Record<string, any>, ...args: any[]): T {
-    return Injectables.getRegistry().build(obj, ...args);
+  static build<T>(name: symbol, ...args: any[]): T {
+    return Injectables.getRegistry().build(name, ...args);
   }
 
   /**
@@ -94,7 +101,7 @@ export class Injectables {
    * @param {InjectablesRegistry} operationsRegistry The new implementation of Registry to use
    * @return {void}
    */
-  static setRegistry(operationsRegistry: InjectablesRegistry) {
+  static setRegistry(operationsRegistry: InjectablesRegistry): void {
     Injectables.actingInjectablesRegistry = operationsRegistry;
   }
   /**
@@ -102,7 +109,7 @@ export class Injectables {
    * @summary Returns the current {@link InjectablesRegistry} or creates a default one if none exists.
    * @return {InjectablesRegistry} The current registry instance
    */
-  private static getRegistry() {
+  private static getRegistry(): InjectablesRegistry {
     if (!Injectables.actingInjectablesRegistry)
       Injectables.actingInjectablesRegistry = new InjectableRegistryImp();
     return Injectables.actingInjectablesRegistry;
@@ -113,7 +120,7 @@ export class Injectables {
    * @summary Resets the registry to a clean state by creating a new empty registry instance.
    * @return {void}
    */
-  static reset() {
+  static reset(): void {
     Injectables.setRegistry(new InjectableRegistryImp());
   }
 
@@ -123,7 +130,7 @@ export class Injectables {
    * @param {string | RegExp} match A string or regular expression pattern to match against injectable names
    * @return {void}
    */
-  static selectiveReset(match: string | RegExp) {
+  static selectiveReset(match: string | RegExp): void {
     const regexp = typeof match === "string" ? new RegExp(match) : match;
     (Injectables.actingInjectablesRegistry as any)["cache"] = Object.entries(
       (Injectables.actingInjectablesRegistry as any)["cache"]
