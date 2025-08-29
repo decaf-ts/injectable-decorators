@@ -171,6 +171,27 @@ describe(`Injectables`, function () {
     expect(testController.repo).toBe(b);
   });
 
+  it("Injects according to a defined object", () => {
+    class EEE {
+      constructor() {}
+    }
+    @injectable(EEE, (original) => {
+      return original;
+    })
+    class FFF {
+      constructor() {}
+    }
+
+    class GGG {
+      @inject(EEE)
+      object!: any;
+    }
+
+    const g = new GGG();
+    expect(g.object).toBeDefined();
+    expect(g.object).toBeInstanceOf(FFF);
+  });
+
   it("Changes Registry", () => {
     expect(Injectables.get("SomeOtherObject")).toBeDefined();
     Injectables.setRegistry(new InjectableRegistryImp());
