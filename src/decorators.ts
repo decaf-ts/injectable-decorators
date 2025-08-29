@@ -203,16 +203,14 @@ export type InstanceTransformer = (injectable: any, obj: any) => any;
  */
 export function inject(
   category?: symbol | string | { new (...args: any[]): any },
-  transformer?: InstanceTransformer
+  transformer?: InstanceTransformer,
+  ...args: any[]
 ) {
   return (target: any, propertyKey?: any) => {
     const values = new WeakMap();
 
-    const name: symbol | undefined = category
-      ? typeof category === "symbol"
-        ? category
-        : Symbol.for(category.toString())
-      : getTypeFromDecorator(target, propertyKey);
+    const name: symbol | string | { new (...args: any[]): any } | undefined =
+      category || getTypeFromDecorator(target, propertyKey);
     if (!name) {
       throw new Error(`Could not get Type from decorator`);
     }
@@ -240,7 +238,7 @@ export function inject(
             get(this: any) {
               let obj = values.get(this);
               if (!obj) {
-                obj = Injectables.get(name);
+                obj = Injectables.get(name, ...args);
                 if (!obj)
                   throw new Error(
                     `Could not get Injectable ${name.toString()} to inject in ${target.constructor ? target.constructor.name : target.name}'s ${propertyKey}`
