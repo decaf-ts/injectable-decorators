@@ -57,22 +57,31 @@ export const getInjectKey = (key: string) => InjectablesKeys.REFLECT + key;
  *   Decorator-->>Client: Return instance
  */
 export function injectable(): (original: any) => any;
-export function injectable(category: string): (original: any) => any;
+export function injectable(
+  category: string | { new (...args: any[]): any }
+): (original: any) => any;
 export function injectable(
   instanceCallback: InstanceCallback<any>
 ): (original: any) => any;
 export function injectable(
-  category: string,
+  category: string | { new (...args: any[]): any },
   instanceCallback: InstanceCallback<any>
 ): (original: any) => any;
 export function injectable(
-  name?: string | InstanceCallback<any>,
+  name?: string | { new (...args: any[]): any } | InstanceCallback<any>,
   cb?: InstanceCallback<any>
 ) {
-  const category = typeof name === "string" ? name : undefined;
-  const instanceCallback = (typeof category === "function" ? category : cb) as
-    | InstanceCallback<any>
-    | undefined;
+  const instanceCallback = (
+    typeof name === "function" && !name.name ? name : cb
+  ) as InstanceCallback<any> | undefined;
+  const category =
+    typeof name === "string"
+      ? name
+      : cb
+        ? name
+        : typeof name === "function" && !name.name
+          ? undefined
+          : name;
 
   return (original: any) => {
     const symbol = Symbol.for(category || original.toString());
