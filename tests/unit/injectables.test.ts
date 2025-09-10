@@ -1,4 +1,4 @@
-import { inject, injectable } from "../../src";
+import { inject, injectable, onDemand, singleton } from "../../src";
 import { Injectables } from "../../src/Injectables";
 import { InjectableRegistryImp } from "../../src";
 
@@ -103,7 +103,7 @@ describe(`Injectables`, function () {
     };
 
     class Controller {
-      @inject(undefined, transform)
+      @inject({ transformer: transform })
       repo!: SomeOtherObject;
 
       constructor() {}
@@ -119,7 +119,7 @@ describe(`Injectables`, function () {
   });
 
   it(`Responds to category as an injectable`, function () {
-    @injectable()
+    @singleton()
     class AAA {
       protected a: string = "aaa";
     }
@@ -150,7 +150,7 @@ describe(`Injectables`, function () {
       protected a: string = "aaa";
     }
 
-    @injectable("EEE")
+    @singleton("EEE")
     class CCC extends DDD {
       protected b: string = "bbbdsad";
     }
@@ -175,8 +175,10 @@ describe(`Injectables`, function () {
     class EEE {
       constructor() {}
     }
-    @injectable(EEE, (original) => {
-      return original;
+    @injectable(EEE, {
+      callback: (original) => {
+        return original;
+      },
     })
     class FFF {
       constructor() {}
@@ -190,6 +192,51 @@ describe(`Injectables`, function () {
     const g = new GGG();
     expect(g.object).toBeDefined();
     expect(g.object).toBeInstanceOf(FFF);
+  });
+
+  it("injects fresh instances when configured", () => {
+    const fn = jest.fn();
+
+    @onDemand()
+    class FreshObject {
+      constructor(...args: any[]) {
+        fn(...args);
+      }
+    }
+
+    class FreshParent {
+      @inject()
+      freshObject!: FreshObject;
+
+      constructor() {}
+    }
+
+    const instance1 = new FreshParent();
+
+    expect(instance1.freshObject).toBeDefined();
+    expect(instance1.freshObject).toBeInstanceOf(FreshObject);
+
+    const instance2 = new FreshParent();
+    expect(instance2.freshObject).toBeDefined();
+    expect(instance2.freshObject).toBeInstanceOf(FreshObject);
+
+    expect(fn).toHaveBeenCalledTimes(2);
+
+    expect(instance1.freshObject).not.toBe(instance2.freshObject);
+
+    jest.resetAllMocks();
+
+    class FreshParent2 {
+      @inject({ args: ["a", "b"] })
+      freshObject!: FreshObject;
+      constructor() {}
+    }
+
+    const instance3 = new FreshParent2();
+    expect(instance3.freshObject).toBeDefined();
+    expect(instance3.freshObject).toBeInstanceOf(FreshObject);
+    expect(fn).toHaveBeenCalledTimes(1);
+    expect(fn).toHaveBeenCalledWith("a", "b");
   });
 
   it("Changes Registry", () => {

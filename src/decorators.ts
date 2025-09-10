@@ -1,21 +1,12 @@
-import { InjectablesKeys } from "./constants";
+import { DefaultInjectablesConfig, InjectablesKeys } from "./constants";
 import { Injectables } from "./Injectables";
-import { getTypeFromDecorator } from "./utils";
-import {
-  InjectableMetadata,
-  InjectableOptions,
-  InstanceCallback,
-} from "./types";
+import { getInjectKey, getTypeFromDecorator } from "./utils";
+import { InjectableMetadata, InstanceCallback } from "./types";
 
-/**
- * @description Generates a fully qualified reflection metadata key.
- * @summary Returns the reflection key for injectables by prefixing the provided key with the base reflection key.
- * @param {string} key The key to be prefixed
- * @return {string} The fully qualified reflection key
- * @function getInjectKey
- * @memberOf module:injectable-decorators
- */
-export const getInjectKey = (key: string) => InjectablesKeys.REFLECT + key;
+export type InjectableConfig = {
+  singleton: boolean;
+  callback?: InstanceCallback<any>;
+};
 
 /**
  * @description Decorator that marks a class as available for dependency injection.
@@ -61,27 +52,29 @@ export function injectable(
   category: string | { new (...args: any[]): any }
 ): (original: any) => any;
 export function injectable(
-  instanceCallback: InstanceCallback<any>
+  cfg: Partial<InjectableConfig>
 ): (original: any) => any;
 export function injectable(
   category: string | { new (...args: any[]): any },
-  instanceCallback: InstanceCallback<any>
+  cfg: Partial<InjectableConfig>
 ): (original: any) => any;
 export function injectable(
-  name?: string | { new (...args: any[]): any } | InstanceCallback<any>,
-  cb?: InstanceCallback<any>
+  name?: string | { new (...args: any[]): any } | Partial<InjectableConfig>,
+  cfg?: Partial<InjectableConfig>
 ) {
-  const instanceCallback = (
-    typeof name === "function" && !name.name ? name : cb
-  ) as InstanceCallback<any> | undefined;
+  cfg =
+    cfg ||
+    (typeof name === "object"
+      ? Object.assign(name as Record<any, any>, DefaultInjectablesConfig)
+      : DefaultInjectablesConfig);
   const category =
-    typeof name === "string"
-      ? name
-      : cb
+    typeof name === "object"
+      ? undefined
+      : typeof name === "string"
         ? name
-        : typeof name === "function" && !name.name
-          ? undefined
-          : name;
+        : typeof name === "function" && name.name
+          ? name
+          : undefined;
 
   return (original: any) => {
     const symbol = Symbol.for(category || original.toString());
@@ -113,21 +106,36 @@ export function injectable(
       value: original.prototype.constructor.name,
     });
 
-    const opts: InjectableOptions<any> = {
-      singleton: true,
-      callback: instanceCallback as InstanceCallback<any>,
-    };
-
     Reflect.defineMetadata(
       getInjectKey(InjectablesKeys.INJECTABLE),
       metadata,
       newConstructor
     );
 
-    Injectables.register(original, symbol, opts);
+    Injectables.register(original, symbol, cfg);
     // return new constructor (will override original)
     return newConstructor;
   };
+}
+
+export function singleton(
+  category?: string | { new (...args: any[]): any },
+  cfg?: Omit<InjectableConfig, "singleton">
+) {
+  return injectable(
+    category as any,
+    Object.assign({}, cfg || {}, { singleton: true })
+  );
+}
+
+export function onDemand(
+  category?: string | { new (...args: any[]): any },
+  cfg?: Omit<InjectableConfig, "singleton">
+) {
+  return injectable(
+    category as any,
+    Object.assign({}, cfg || {}, { singleton: false })
+  );
 }
 /**
  * @description Function type for transforming injectable instances before they're injected.
@@ -141,6 +149,11 @@ export function injectable(
  * @memberOf module:injectable-decorators
  */
 export type InstanceTransformer = (injectable: any, obj: any) => any;
+
+export type InjectOptions = {
+  args?: any[];
+  transformer?: InstanceTransformer;
+};
 
 /**
  * @description Property decorator that injects a dependency into a class property.
@@ -201,16 +214,30 @@ export type InstanceTransformer = (injectable: any, obj: any) => any;
  *     end
  *   end
  */
+export function inject(): (target: any, propertyKey: any) => void;
 export function inject(
-  category?: symbol | string | { new (...args: any[]): any },
-  transformer?: InstanceTransformer,
-  ...args: any[]
+  category: string | { new (...args: any[]): any }
+): (target: any, propertyKey: any) => void;
+export function inject(
+  cfg: Partial<InjectOptions>
+): (target: any, propertyKey: any) => void;
+export function inject(
+  category?:
+    | symbol
+    | string
+    | { new (...args: any[]): any }
+    | Partial<InjectOptions>,
+  cfg?: Partial<InjectOptions>
 ) {
-  return (target: any, propertyKey?: any) => {
-    const values = new WeakMap();
+  return (target: any, propertyKey: any) => {
+    const config: InjectOptions = (
+      cfg || typeof category === "object" ? category : {}
+    ) as InjectOptions;
 
     const name: symbol | string | { new (...args: any[]): any } | undefined =
-      category || getTypeFromDecorator(target, propertyKey);
+      (typeof category !== "object" &&
+        (category as symbol | string | { new (...args: any[]): any })) ||
+      getTypeFromDecorator(target, propertyKey);
     if (!name) {
       throw new Error(`Could not get Type from decorator`);
     }
@@ -232,25 +259,26 @@ export function inject(
           propertyKey
         ) as PropertyDescriptor;
         if (descriptor.configurable) {
+          const values = new WeakMap();
           Object.defineProperty(this, propertyKey, {
             enumerable: true,
             configurable: false,
             get(this: any) {
               let obj = values.get(this);
-              if (!obj) {
-                obj = Injectables.get(name, ...args);
-                if (!obj)
-                  throw new Error(
-                    `Could not get Injectable ${name.toString()} to inject in ${target.constructor ? target.constructor.name : target.name}'s ${propertyKey}`
-                  );
-                if (transformer)
-                  try {
-                    obj = transformer(obj, target);
-                  } catch (e) {
-                    console.error(e);
-                  }
-                values.set(this, obj);
-              }
+              if (obj) return obj;
+              obj = Injectables.get(name, ...(config.args || []));
+              if (!obj)
+                throw new Error(
+                  `Could not get Injectable ${name.toString()} to inject in ${target.constructor ? target.constructor.name : target.name}'s ${propertyKey}`
+                );
+              if (config.transformer)
+                try {
+                  obj = config.transformer(obj, target);
+                } catch (e) {
+                  console.error(e);
+                }
+              values.set(this, obj);
+
               return obj;
             },
           });

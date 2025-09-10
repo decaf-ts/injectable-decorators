@@ -1,6 +1,6 @@
 import { InjectableDef, InjectableOptions } from "./types";
 import { InjectablesKeys } from "./constants";
-import { getInjectKey } from "./decorators";
+import { getInjectKey } from "./utils";
 
 /**
  * @description Type representing either a class constructor or an instance.
@@ -158,7 +158,7 @@ export class InjectableRegistryImp implements InjectablesRegistry {
 
     if (!this.cache[name] || force)
       this.cache[name] = {
-        instance: constructor ? obj : undefined,
+        instance: options.singleton && constructor ? obj : undefined,
         constructor: !constructor ? obj : (obj as any).constructor,
         options: options,
       };
@@ -176,7 +176,9 @@ export class InjectableRegistryImp implements InjectablesRegistry {
         `failed to build ${name.toString()} with args ${args}: ${e}`
       );
     }
-    this.cache[name].instance = instance;
+    if (options.singleton) {
+      this.cache[name].instance = instance;
+    }
     if (options.callback) instance = options.callback(instance, ...args);
     return instance;
   }
