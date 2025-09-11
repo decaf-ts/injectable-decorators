@@ -246,10 +246,21 @@ describe(`Injectables`, function () {
       constructor() {}
     }
 
+    class FreshParent3 {
+      @inject({ args: ["c", "d"] })
+      freshObject!: FreshObject2;
+      constructor() {}
+    }
+
     const instance3 = new FreshParent2();
+    const instance4 = new FreshParent3();
     expect(instance3.freshObject).toBeDefined();
     expect(instance3.freshObject).toBeInstanceOf(FreshObject2);
-    expect(fn).toHaveBeenCalledTimes(1);
-    expect(fn).toHaveBeenCalledWith("a", "b");
+    expect(instance4.freshObject).toBeDefined();
+    expect(instance4.freshObject).toBeInstanceOf(FreshObject2);
+    expect(fn).toHaveBeenCalledTimes(2);
+    expect(fn).toHaveBeenNthCalledWith(1, "a", "b");
+    expect(fn).toHaveBeenNthCalledWith(2, "c", "d");
+    expect(instance3.freshObject).not.toBe(instance4.freshObject);
   });
 });
