@@ -194,6 +194,12 @@ describe(`Injectables`, function () {
     expect(g.object).toBeInstanceOf(FFF);
   });
 
+  it("Changes Registry", () => {
+    expect(Injectables.get("SomeOtherObject")).toBeDefined();
+    Injectables.setRegistry(new InjectableRegistryImp());
+    expect(Injectables.get("SomeOtherObject")).not.toBeDefined();
+  });
+
   it("injects fresh instances when configured", () => {
     const fn = jest.fn();
 
@@ -224,24 +230,26 @@ describe(`Injectables`, function () {
 
     expect(instance1.freshObject).not.toBe(instance2.freshObject);
 
+    Injectables.reset();
     jest.resetAllMocks();
 
+    @onDemand()
+    class FreshObject2 {
+      constructor(...args: any[]) {
+        fn(...args);
+      }
+    }
+
     class FreshParent2 {
-      @inject(FreshObject, { args: ["a", "b"] })
-      freshObject!: FreshObject;
+      @inject({ args: ["a", "b"] })
+      freshObject!: FreshObject2;
       constructor() {}
     }
 
     const instance3 = new FreshParent2();
     expect(instance3.freshObject).toBeDefined();
-    expect(instance3.freshObject).toBeInstanceOf(FreshObject);
+    expect(instance3.freshObject).toBeInstanceOf(FreshObject2);
     expect(fn).toHaveBeenCalledTimes(1);
     expect(fn).toHaveBeenCalledWith("a", "b");
-  });
-
-  it("Changes Registry", () => {
-    expect(Injectables.get("SomeOtherObject")).toBeDefined();
-    Injectables.setRegistry(new InjectableRegistryImp());
-    expect(Injectables.get("SomeOtherObject")).not.toBeDefined();
   });
 });
