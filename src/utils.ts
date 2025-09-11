@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { InjectablesKeys } from "./constants";
+import { InjectablesKeys, TypeKey } from "./constants";
 
 /**
  * @description Generates a fully qualified reflection metadata key.
@@ -10,14 +10,6 @@ import { InjectablesKeys } from "./constants";
  * @memberOf module:injectable-decorators
  */
 export const getInjectKey = (key: string) => InjectablesKeys.REFLECT + key;
-
-/**
- * @description Reflection metadata key for accessing TypeScript type information.
- * @summary Holds the key for retrieving the design type from TypeScript's reflection metadata.
- * @const TypeKey
- * @memberOf module:injectable-decorators
- */
-export const TypeKey = "design:type";
 
 /**
  * @description Extracts the type name from a decorated property using reflection.

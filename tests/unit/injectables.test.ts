@@ -227,7 +227,7 @@ describe(`Injectables`, function () {
     jest.resetAllMocks();
 
     class FreshParent2 {
-      @inject({ args: ["a", "b"] })
+      @inject(FreshObject, { args: ["a", "b"] })
       freshObject!: FreshObject;
       constructor() {}
     }

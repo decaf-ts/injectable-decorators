@@ -20,3 +20,11 @@ export const InjectablesKeys = {
 export const DefaultInjectablesConfig: InjectableConfig = {
   singleton: true,
 };
+
+/**
+ * @description Reflection metadata key for accessing TypeScript type information.
+ * @summary Holds the key for retrieving the design type from TypeScript's reflection metadata.
+ * @const TypeKey
+ * @memberOf module:injectable-decorators
+ */
+export const TypeKey = "design:type";

@@ -10,15 +10,63 @@ export type InjectableConfig = {
 
 /**
  * @description Decorator that marks a class as available for dependency injection.
- * @summary Defines a class as an injectable singleton that can be retrieved from the registry.
- * When applied to a class, replaces its constructor with one that returns a singleton instance.
+ * @summary Defines a class as an injectable that can be retrieved from the registry.
+ * When applied to a class, replaces its constructor with one that returns an instance.
  *
- * @param {string} [category] Defaults to the class name. Useful when minification occurs and names are changed,
+ * @return A decorator function that transforms the class into an injectable.
+ */
+export function injectable(): (original: any) => any;
+/**
+ * @description Decorator that marks a class as available for dependency injection.
+ * @summary Defines a class as an injectable that can be retrieved from the registry.
+ * When applied to a class, replaces its constructor with one that returns an instance.
+ *
+ * @param category Defaults to the class category. Useful when minification occurs and names are changed,
  * or when you want to upcast the object to a different type.
- * @param {boolean} [force] Defines if the injectable should override an already existing instance (if any).
- * Only meant for extending decorators.
- * @param {Function} [instanceCallback] Optional callback function that will be called with the instance after creation.
- * @return {Function} A decorator function that transforms the class into an injectable.
+ *
+ * @return A decorator function that transforms the class into an injectable.
+ */
+export function injectable(
+  category: string | { new (...args: any[]): any }
+): (original: any) => any;
+/**
+ * @description Decorator that marks a class as available for dependency injection.
+ * @summary Defines a class as an injectable that can be retrieved from the registry.
+ * When applied to a class, replaces its constructor with one that returns an instance.
+ *
+ * @param {Partial<InjectableConfig>} cfg=DefaultInjectableConfig Allows overriding the default singleton behavior and adding a callback function.
+ *
+ * @return A decorator function that transforms the class into an injectable.
+ */
+export function injectable(
+  cfg: Partial<InjectableConfig>
+): (original: any) => any;
+
+/**
+ * @description Decorator that marks a class as available for dependency injection.
+ * @summary Defines a class as an injectable that can be retrieved from the registry.
+ * When applied to a class, replaces its constructor with one that returns an instance.
+ *
+ * @param category Defaults to the class category. Useful when minification occurs and names are changed,
+ * or when you want to upcast the object to a different type.
+ * @param {Partial<InjectableConfig>} cfg=DefaultInjectableConfig Allows overriding the default singleton behavior and adding a callback function.
+ *
+ * @return A decorator function that transforms the class into an injectable.
+ */
+export function injectable(
+  category: string | { new (...args: any[]): any },
+  cfg: Partial<InjectableConfig>
+): (original: any) => any;
+/**
+ * @description Decorator that marks a class as available for dependency injection.
+ * @summary Defines a class as an injectable that can be retrieved from the registry.
+ * When applied to a class, replaces its constructor with one that returns an instance.
+ *
+ * @param [category] Defaults to the class category. Useful when minification occurs and names are changed,
+ * or when you want to upcast the object to a different type.
+ * @param {Partial<InjectableConfig>} [cfg=DefaultInjectableConfig] Allows overriding the default singleton behavior and adding a callback function.
+ *
+ * @return A decorator function that transforms the class into an injectable.
  *
  * @function injectable
  * @category Class Decorators
@@ -33,12 +81,12 @@ export type InjectableConfig = {
  *   Decorator->>Decorator: Create new constructor
  *
  *   Note over Decorator: When new instance requested
- *   Decorator->>Injectables: get(name)
+ *   Decorator->>Injectables: get(category)
  *   alt Instance exists
  *     Injectables-->>Decorator: Return existing instance
  *   else No instance
- *     Decorator->>Injectables: register(original, name)
- *     Decorator->>Injectables: get(name)
+ *     Decorator->>Injectables: register(original, category)
+ *     Decorator->>Injectables: get(category)
  *     Injectables-->>Decorator: Return new instance
  *     opt Has callback
  *       Decorator->>Decorator: Call instanceCallback
@@ -47,41 +95,30 @@ export type InjectableConfig = {
  *   Decorator->>Decorator: Define metadata
  *   Decorator-->>Client: Return instance
  */
-export function injectable(): (original: any) => any;
 export function injectable(
-  category: string | { new (...args: any[]): any }
-): (original: any) => any;
-export function injectable(
-  cfg: Partial<InjectableConfig>
-): (original: any) => any;
-export function injectable(
-  category: string | { new (...args: any[]): any },
-  cfg: Partial<InjectableConfig>
-): (original: any) => any;
-export function injectable(
-  name?: string | { new (...args: any[]): any } | Partial<InjectableConfig>,
+  category?: string | { new (...args: any[]): any } | Partial<InjectableConfig>,
   cfg?: Partial<InjectableConfig>
 ) {
   cfg =
     cfg ||
-    (typeof name === "object"
-      ? Object.assign(name as Record<any, any>, DefaultInjectablesConfig)
+    (typeof category === "object"
+      ? Object.assign(category as Record<any, any>, DefaultInjectablesConfig)
       : DefaultInjectablesConfig);
-  const category =
-    typeof name === "object"
+  category =
+    typeof category === "object"
       ? undefined
-      : typeof name === "string"
-        ? name
-        : typeof name === "function" && name.name
-          ? name
+      : typeof category === "string"
+        ? category
+        : typeof category === "function" && category.name
+          ? category
           : undefined;
 
   return (original: any) => {
     const symbol = Symbol.for(category || original.toString());
-    const name = category || original.name;
+    category = category || original.name;
 
     const metadata: InjectableMetadata = {
-      class: name,
+      class: category as string,
       symbol: symbol,
     };
 
@@ -160,6 +197,49 @@ export type InjectOptions = {
  * @summary Allows for the injection of an {@link injectable} decorated dependency into a class property.
  * The property must be typed for the requested dependency. Only concrete classes are supported; generics are not.
  *
+ * @return {Function} A property decorator function that sets up the dependency injection.
+ */
+export function inject(): (target: any, propertyKey: any) => void;
+/**
+ * @description Property decorator that injects a dependency into a class property.
+ * @summary Allows for the injection of an {@link injectable} decorated dependency into a class property.
+ * The property must be typed for the requested dependency. Only concrete classes are supported; generics are not.
+ *
+ * @param {string} category Defaults to the class name derived from the property type. Useful when minification occurs
+ * and names are changed, or when you want to upcast the object to a different type.
+ * @return {Function} A property decorator function that sets up the dependency injection.
+ */
+export function inject(
+  category: string | { new (...args: any[]): any }
+): (target: any, propertyKey: any) => void;
+/**
+ * @description Property decorator that injects a dependency into a class property.
+ * @summary Allows for the injection of an {@link injectable} decorated dependency into a class property.
+ * The property must be typed for the requested dependency. Only concrete classes are supported; generics are not.
+ *
+ * @param {Partial<InjectOptions} [cfg={}] Optional function to transform the injectable instance before it's injected, or arguments to pass the constructor when injecting onDemand * @return {Function} A property decorator function that sets up the dependency injection.
+ */
+export function inject(
+  cfg: Partial<InjectOptions>
+): (target: any, propertyKey: any) => void;
+/**
+ * @description Property decorator that injects a dependency into a class property.
+ * @summary Allows for the injection of an {@link injectable} decorated dependency into a class property.
+ * The property must be typed for the requested dependency. Only concrete classes are supported; generics are not.
+ *
+ * @param {string} category Defaults to the class name derived from the property type. Useful when minification occurs
+ * and names are changed, or when you want to upcast the object to a different type.
+ * @param {Partial<InjectOptions} cfg={} Optional function to transform the injectable instance before it's injected, or arguments to pass the constructor when injecting onDemand * @return {Function} A property decorator function that sets up the dependency injection.
+ */
+export function inject(
+  category: string | { new (...args: any[]): any },
+  cfg: Partial<InjectOptions>
+): (target: any, propertyKey: any) => void;
+/**
+ * @description Property decorator that injects a dependency into a class property.
+ * @summary Allows for the injection of an {@link injectable} decorated dependency into a class property.
+ * The property must be typed for the requested dependency. Only concrete classes are supported; generics are not.
+ *
  * Injected properties should be described like so:
  * <pre>
  *     class ClassName {
@@ -178,7 +258,7 @@ export type InjectOptions = {
  *
  * @param {string} [category] Defaults to the class name derived from the property type. Useful when minification occurs
  * and names are changed, or when you want to upcast the object to a different type.
- * @param {InstanceTransformer} [transformer] Optional function to transform the injectable instance before it's injected.
+ * @param {Partial<InjectOptions} [cfg={}] Optional function to transform the injectable instance before it's injected, or arguments to pass the constructor when injecting onDemand
  * @return {Function} A property decorator function that sets up the dependency injection.
  *
  * @function inject
@@ -214,13 +294,6 @@ export type InjectOptions = {
  *     end
  *   end
  */
-export function inject(): (target: any, propertyKey: any) => void;
-export function inject(
-  category: string | { new (...args: any[]): any }
-): (target: any, propertyKey: any) => void;
-export function inject(
-  cfg: Partial<InjectOptions>
-): (target: any, propertyKey: any) => void;
 export function inject(
   category?:
     | symbol
@@ -251,6 +324,8 @@ export function inject(
       propertyKey
     );
 
+    const values = new WeakMap();
+
     Object.defineProperty(target, propertyKey, {
       configurable: true,
       get(this: any) {
@@ -259,7 +334,7 @@ export function inject(
           propertyKey
         ) as PropertyDescriptor;
         if (descriptor.configurable) {
-          const values = new WeakMap();
+          // let /obj: any;
           Object.defineProperty(this, propertyKey, {
             enumerable: true,
             configurable: false,
