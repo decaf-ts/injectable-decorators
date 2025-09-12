@@ -39,7 +39,6 @@ export type Constructor<T = any> = { new (...args: any[]): T };
  * @return {function(any): any} A decorator function that transforms the class into an injectable.
  *
  * @function injectable
- * @category Decorators
  */
 export function injectable(): (original: any) => any;
 /**
@@ -53,7 +52,6 @@ export function injectable(): (original: any) => any;
  * @return {function(any): any} A decorator function that transforms the class into an injectable.
  *
  * @function injectable
- * @category Decorators
  */
 export function injectable(
   category: string | Constructor
@@ -68,7 +66,6 @@ export function injectable(
  * @return {function(any): any} A decorator function that transforms the class into an injectable.
  *
  * @function injectable
- * @category Decorators
  */
 export function injectable(
   cfg: Partial<InjectableConfig>
@@ -86,7 +83,6 @@ export function injectable(
  * @return {function(any): any} A decorator function that transforms the class into an injectable.
  *
  * @function injectable
- * @category Decorators
  */
 export function injectable(
   category: string | Constructor,
@@ -104,7 +100,7 @@ export function injectable(
  * @return {function(any): any} A decorator function that transforms the class into an injectable.
  *
  * @function injectable
- * @category Decorators
+ * @category Class Decorators
  *
  * @mermaid
  * sequenceDiagram
@@ -195,7 +191,7 @@ export function injectable(
  * @summary Wraps {@link injectable} forcing the singleton lifecycle so only one instance is created and reused.
  * @param {string|Constructor} [category] Optional explicit category/symbol source; defaults to the class.
  * @param {Omit<InjectableConfig, "singleton">} [cfg] Additional injectable configuration excluding the singleton flag.
- * @return function(any): any} A class decorator that registers the target as a singleton injectable.
+ * @return {function(any): any} A class decorator that registers the target as a singleton injectable.
  * @function singleton
  * @category Class Decorators
  */
@@ -262,7 +258,6 @@ export type InjectOptions = {
  * @return {function(any, any): void} A property decorator function that sets up the dependency injection.
  *
  * @function inject
- * @category Decorators
  */
 export function inject(): (target: any, propertyKey: any) => void;
 /**
@@ -275,7 +270,6 @@ export function inject(): (target: any, propertyKey: any) => void;
  * @return {function(any, any): void} A property decorator function that sets up the dependency injection.
  *
  * @function inject
- * @category Decorators
  */
 export function inject(
   category: string | Constructor
@@ -289,7 +283,6 @@ export function inject(
  * @return {function(any, any): void} A property decorator function that sets up the dependency injection.
  *
  * @function inject
- * @category Decorators
  */
 export function inject(
   cfg: Partial<InjectOptions>
@@ -305,7 +298,6 @@ export function inject(
  * @return {function(any, any): void} A property decorator function that sets up the dependency injection.
  *
  * @function inject
- * @category Decorators
  */
 export function inject(
   category: string | Constructor,
