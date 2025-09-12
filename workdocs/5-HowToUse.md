@@ -1,232 +1,215 @@
 ### How to Use
 
-- [Initial Setup](./workdocs/tutorials/For%20Developers.md#_initial-setup_)
-- [Installation](./workdocs/tutorials/For%20Developers.md#installation)
+- See Initial Setup and Installation in: ./workdocs/tutorials/For Developers.md
 
 ## Basic Usage Examples
 
-### Creating an Injectable Service
+### 1) Mark a class as injectable and get it from the registry
 
-**Use Case**: You want to create a service that can be injected into other components of your application.
+Description: Define a class with @injectable() so it becomes available through the central registry. Creating with new returns the instance managed by the registry.
 
 ```typescript
-import { injectable } from 'injectable-decorators';
+import 'reflect-metadata';
+import { injectable, Injectables } from 'injectable-decorators';
 
 @injectable()
-class LoggerService {
-  log(message: string): void {
-    console.log(`[LOG]: ${message}`);
-  }
-
-  error(message: string): void {
-    console.error(`[ERROR]: ${message}`);
-  }
+class InitialObject {
+  doSomething() { return 5; }
 }
 
-// The service is automatically registered in the Injectables registry
-// and will be available for injection
+const obj = new InitialObject();
+const same = Injectables.get(InitialObject);
+// obj and same refer to the same instance (singleton by default)
 ```
 
-### Injecting a Service into a Component
+### 2) Inject a dependency into a property
 
-**Use Case**: You want to use a service in a component without manually creating an instance.
+Description: Use @inject() on a typed property. The instance is created lazily when the property is first accessed and cached thereafter.
 
 ```typescript
-import { inject } from 'injectable-decorators';
-import { LoggerService } from './logger.service';
+import 'reflect-metadata';
+import { injectable, inject, Injectables } from 'injectable-decorators';
 
-class UserComponent {
+@injectable()
+class SomeService { value = 5; }
+
+class Controller {
   @inject()
-  private logger!: LoggerService;
-
-  createUser(username: string): void {
-    this.logger.log(`Creating user: ${username}`);
-    // User creation logic...
-    this.logger.log(`User ${username} created successfully`);
-  }
+  service!: SomeService; // non-null assertion because it's set outside the constructor
 }
 
-// When the logger property is accessed, the LoggerService instance
-// will be automatically injected
+const c = new Controller();
+console.log(c.service.value); // 5
+console.log(c.service === Injectables.get(SomeService)); // true
 ```
 
-### Using a Custom Category Name
+### 3) Use a custom category (string) for minification or upcasting
 
-**Use Case**: You want to ensure your injectables work correctly even after code minification, or you want to use a different name for the injectable.
+Description: Provide a stable name when class names may change (e.g., minification) or to upcast through a base type.
 
 ```typescript
-import { injectable } from 'injectable-decorators';
+import 'reflect-metadata';
+import { injectable, inject, singleton } from 'injectable-decorators';
 
-@injectable('AuthService')
-class AuthenticationService {
-  authenticate(username: string, password: string): boolean {
-    // Authentication logic...
-    return true;
-  }
+@singleton()
+class AAA { a = 'aaa'; }
+
+@injectable('AAA')
+class BBB extends AAA { b = 'bbb'; }
+
+const b = new BBB();
+
+class Host {
+  @inject()
+  repo!: AAA; // resolves to the instance registered under category 'AAA'
 }
 
-class LoginComponent {
-  @inject('AuthService')
-  private auth!: AuthenticationService;
-
-  login(username: string, password: string): void {
-    if (this.auth.authenticate(username, password)) {
-      console.log('Login successful');
-    } else {
-      console.log('Login failed');
-    }
-  }
-}
+const h = new Host();
+console.log(h.repo === b); // true
 ```
 
-### Using a Transformer with Inject
+### 4) Inject by explicit category (string)
 
-**Use Case**: You want to transform or configure an injectable instance before it's used.
+Description: When a different string category was used at registration, pass that string to @inject.
 
 ```typescript
-import { inject, InstanceTransformer } from 'injectable-decorators';
+import 'reflect-metadata';
+import { inject, singleton } from 'injectable-decorators';
 
-@injectable()
-class ConfigService {
-  private config: Record<string, any> = {
-    apiUrl: 'https://api.example.com',
-    timeout: 5000
-  };
+class DDD { a = 'aaa'; }
 
-  get(key: string): any {
-    return this.config[key];
-  }
+@singleton('EEE')
+class CCC extends DDD { b = 'bbb'; }
+
+const instance = new CCC();
+
+class Holder {
+  @inject('EEE')
+  repo!: CCC;
 }
 
-// Transformer function that adds environment-specific configuration
-const configTransformer: InstanceTransformer = (config: ConfigService, target: any) => {
-  // You could customize the config based on the target or environment
-  return config;
-};
-
-class ApiClient {
-  @inject(undefined, configTransformer)
-  private config!: ConfigService;
-
-  fetchData(): Promise<any> {
-    const apiUrl = this.config.get('apiUrl');
-    const timeout = this.config.get('timeout');
-
-    // Use the configured values...
-    return Promise.resolve({ data: 'example' });
-  }
-}
+const h = new Holder();
+console.log(h.repo === instance); // true
 ```
 
-### Manually Registering and Retrieving Injectables
+### 5) Map one constructor to another and inject by constructor
 
-**Use Case**: You want to manually register an existing instance or retrieve an injectable instance directly.
-
-```typescript
-import { Injectables } from 'injectable-decorators';
-
-// Register an existing instance
-const databaseConnection = {
-  query: (sql: string) => Promise.resolve([]),
-  close: () => Promise.resolve()
-};
-
-Injectables.register(databaseConnection, 'DatabaseConnection');
-
-// Retrieve the instance elsewhere in your code
-class QueryService {
-  private db = Injectables.get<typeof databaseConnection>('DatabaseConnection');
-
-  async executeQuery(sql: string): Promise<any[]> {
-    if (!this.db) {
-      throw new Error('Database connection not available');
-    }
-    return this.db.query(sql);
-  }
-}
-```
-
-### Creating a Custom Injectable Registry
-
-**Use Case**: You want to customize how injectables are stored and retrieved, perhaps for testing or to add additional functionality.
+Description: You can register an injectable using another constructor as the category, then inject it by that constructor.
 
 ```typescript
-import { Injectables, InjectablesRegistry } from 'injectable-decorators';
+import 'reflect-metadata';
+import { injectable, inject } from 'injectable-decorators';
 
-// Create a custom registry implementation
-class LoggingRegistry implements InjectablesRegistry {
-  private defaultRegistry: InjectablesRegistry;
+class Token {}
 
-  constructor(defaultRegistry: InjectablesRegistry) {
-    this.defaultRegistry = defaultRegistry;
-  }
-
-  get<T>(name: string, ...args: any[]): T | undefined {
-    console.log(`Getting injectable: ${name}`);
-    return this.defaultRegistry.get<T>(name, ...args);
-  }
-
-  register<T>(constructor: any, ...args: any[]): void {
-    console.log(`Registering injectable: ${args[0] || constructor.name}`);
-    return this.defaultRegistry.register(constructor, ...args);
-  }
-
-  build<T>(obj: Record<string, any>, ...args: any[]): T {
-    console.log(`Building injectable: ${obj.name}`);
-    return this.defaultRegistry.build<T>(obj, ...args);
-  }
+@injectable(Token, { callback: (original) => original })
+class Impl {
+  id = 1;
 }
 
-// Use the custom registry
-import { InjectableRegistryImp } from 'injectable-decorators';
-const customRegistry = new LoggingRegistry(new InjectableRegistryImp());
-Injectables.setRegistry(customRegistry);
+class UsesImpl {
+  @inject(Token)
+  object!: Impl; // injects the instance registered under Token (Impl instance)
+}
+
+const u = new UsesImpl();
+console.log(u.object instanceof Impl); // true
 ```
 
-### Resetting the Registry
+### 6) Non-singleton injectables with @onDemand and passing constructor args
 
-**Use Case**: You want to clear all registered injectables, perhaps for testing or when switching application contexts.
+Description: Use @onDemand() so each injection produces a fresh instance. You can pass args for construction via @inject({ args }).
 
 ```typescript
-import { Injectables } from 'injectable-decorators';
+import 'reflect-metadata';
+import { onDemand, inject } from 'injectable-decorators';
 
-// Reset all injectables
+@onDemand()
+class FreshObject {
+  constructor(public a?: string, public b?: string) {}
+}
+
+class ParentA {
+  @inject()
+  fresh!: FreshObject; // new instance per parent
+}
+
+class ParentB {
+  @inject({ args: ['x', 'y'] })
+  fresh!: FreshObject; // passes constructor args to on-demand instance
+}
+
+const p1 = new ParentA();
+const p2 = new ParentA();
+console.log(p1.fresh !== p2.fresh); // true
+
+const p3 = new ParentB();
+console.log([p3.fresh.a, p3.fresh.b]); // ['x','y']
+```
+
+### 7) Transform an injected value
+
+Description: Modify the resolved instance before assignment using a transformer.
+
+```typescript
+import 'reflect-metadata';
+import { injectable, inject } from 'injectable-decorators';
+
+@injectable('SomeOtherObject')
+class SomeOtherObject { value() { return 10; } }
+
+class Controller {
+  @inject({ transformer: (obj: SomeOtherObject, c: Controller) => '1' })
+  repo!: SomeOtherObject | string;
+}
+
+const c = new Controller();
+console.log(c.repo); // '1'
+```
+
+### 8) Registry operations: reset and swapping registry
+
+Description: Reset clears all registrations. Swapping the registry replaces the storage, losing previous entries.
+
+```typescript
+import { Injectables, InjectableRegistryImp } from 'injectable-decorators';
+
+// ensure something is registered
+Injectables.get('SomeOtherObject');
+
+// swap to a fresh registry
+Injectables.setRegistry(new InjectableRegistryImp());
+console.log(Injectables.get('SomeOtherObject')); // undefined
+
+// reset to a new empty default registry
 Injectables.reset();
-
-// Selectively reset injectables matching a pattern
-Injectables.selectiveReset(/^Auth/); // Resets all injectables whose names start with "Auth"
 ```
 
-### Using Callback with Injectable
+### 9) Singleton vs onDemand convenience decorators
 
-**Use Case**: You want to perform additional setup on an injectable instance after it's created.
+Description: Prefer @singleton() to force single instance, or @onDemand() for new instance per retrieval.
 
 ```typescript
-import { injectable } from 'injectable-decorators';
+import { singleton, onDemand } from 'injectable-decorators';
 
-const setupLogger = (instance: LoggerService) => {
-  // Configure the logger after instantiation
-  instance.setLogLevel('debug');
-  instance.enableConsoleOutput(true);
-};
+@singleton()
+class OneOnly {}
 
-@injectable(undefined, false, setupLogger)
-class LoggerService {
-  private logLevel: string = 'info';
-  private consoleOutput: boolean = false;
-
-  setLogLevel(level: string): void {
-    this.logLevel = level;
-  }
-
-  enableConsoleOutput(enabled: boolean): void {
-    this.consoleOutput = enabled;
-  }
-
-  log(message: string): void {
-    if (this.consoleOutput) {
-      console.log(`[${this.logLevel.toUpperCase()}]: ${message}`);
-    }
-  }
-}
+@onDemand()
+class Many {}
 ```
+
+### 10) Utility helpers and constants
+
+Description: Generate reflection keys and understand default config.
+
+```typescript
+import { getInjectKey } from 'injectable-decorators';
+
+console.log(getInjectKey('injectable')); // "inject.db.injectable"
+console.log(getInjectKey('inject'));     // "inject.db.inject"
+```
+
+Notes:
+- Always include `import 'reflect-metadata'` once in your app before using decorators.
+- VERSION is exported as a string placeholder defined at build time.
