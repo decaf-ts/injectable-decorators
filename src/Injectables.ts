@@ -48,6 +48,11 @@ import { InjectableOptions } from "./types";
  *   Injectables-->>Client: MyService instance
  */
 export class Injectables {
+  /**
+   * @description Holds the active registry implementation used by the Injectables facade.
+   * @summary Internal static reference that can be swapped via setRegistry to customize how injectables are stored and retrieved.
+   * @type {InjectablesRegistry | undefined}
+   */
   private static actingInjectablesRegistry?: InjectablesRegistry = undefined;
 
   private constructor() {}
