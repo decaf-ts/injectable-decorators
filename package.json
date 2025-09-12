@@ -1,6 +1,6 @@
 {
   "name": "@decaf-ts/injectable-decorators",
-  "version": "1.6.8",
+  "version": "1.6.9",
   "description": "injectable decorators extension for decorator validation",
   "type": "module",
   "exports": {
