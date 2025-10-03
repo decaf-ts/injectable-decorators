@@ -2,6 +2,7 @@ import { DefaultInjectablesConfig, InjectablesKeys } from "./constants";
 import { Injectables } from "./Injectables";
 import { getInjectKey, getTypeFromDecorator } from "./utils";
 import { InjectableMetadata, InstanceCallback } from "./types";
+import { DecorationKeys, Metadata } from "@decaf-ts/decoration";
 
 /**
  * @description Configuration options for the @injectable decorator.
@@ -16,6 +17,62 @@ export type InjectableConfig = {
   singleton: boolean;
   callback?: InstanceCallback<any>;
 };
+
+export function injectableBaseDecorator(
+  category?: string | Constructor | Partial<InjectableConfig>,
+  cfg?: Partial<InjectableConfig>
+) {
+  cfg =
+    cfg ||
+    (typeof category === "object"
+      ? Object.assign(category as Record<any, any>, DefaultInjectablesConfig)
+      : DefaultInjectablesConfig);
+  category =
+    typeof category === "object"
+      ? undefined
+      : typeof category === "string"
+        ? category
+        : typeof category === "function" && category.name
+          ? category
+          : undefined;
+  return function injectableInnerDecorator(original: any) {
+    const symbol = Symbol.for(category || original.toString());
+    category = category || original.name;
+
+    const metadata: InjectableMetadata = {
+      class: category as string,
+      symbol: symbol,
+    };
+
+    // the new constructor behaviour
+    const newConstructor: any = function (...args: any[]) {
+      return Injectables.get<any>(symbol, ...args);
+    };
+
+    // copy prototype so instanceof operator still works
+    newConstructor.prototype = original.prototype;
+    // newConstructor.__proto__ = original.__proto__;
+    // Sets the proper constructor name for type verification
+    Object.defineProperty(newConstructor, "name", {
+      writable: false,
+      enumerable: true,
+      configurable: false,
+      value: original.prototype.constructor.name,
+    });
+
+    Metadata.set(newConstructor, DecorationKeys.CONSTRUCTOR, original);
+    // Metadata.set(original, `${InjectablesKeys.INJECTABLE}`);
+    Reflect.defineMetadata(
+      getInjectKey(InjectablesKeys.INJECTABLE),
+      metadata,
+      newConstructor
+    );
+
+    Injectables.register(original, symbol, cfg);
+    // return new constructor (will override original)
+    return newConstructor;
+  };
+}
 
 /**
  * @description Generic constructor type for class-like values.
@@ -249,6 +306,72 @@ export type InjectOptions = {
   args?: any[];
   transformer?: InstanceTransformer;
 };
+
+export function injectBaseDecorator(
+  category?: symbol | string | Constructor | Partial<InjectOptions>,
+  cfg?: Partial<InjectOptions>
+) {
+  return function injectableInnerDecorator(target: any, propertyKey: any) {
+    const config: InjectOptions = (
+      cfg || typeof category === "object" ? category : {}
+    ) as InjectOptions;
+
+    const name: symbol | string | Constructor | undefined =
+      (typeof category !== "object" &&
+        (category as symbol | string | Constructor)) ||
+      getTypeFromDecorator(target, propertyKey);
+    if (!name) {
+      throw new Error(`Could not get Type from decorator`);
+    }
+
+    Reflect.defineMetadata(
+      getInjectKey(InjectablesKeys.INJECT),
+      {
+        injectable: name,
+      },
+      target,
+      propertyKey
+    );
+
+    const values = new WeakMap();
+
+    Object.defineProperty(target, propertyKey, {
+      configurable: true,
+      get(this: any) {
+        const descriptor: PropertyDescriptor = Object.getOwnPropertyDescriptor(
+          target,
+          propertyKey
+        ) as PropertyDescriptor;
+        if (descriptor.configurable) {
+          // let /obj: any;
+          Object.defineProperty(this, propertyKey, {
+            enumerable: true,
+            configurable: false,
+            get(this: any) {
+              let obj = values.get(this);
+              if (obj) return obj;
+              obj = Injectables.get(name, ...(config.args || []));
+              if (!obj)
+                throw new Error(
+                  `Could not get Injectable ${name.toString()} to inject in ${target.constructor ? target.constructor.name : target.name}'s ${propertyKey}`
+                );
+              if (config.transformer)
+                try {
+                  obj = config.transformer(obj, target);
+                } catch (e) {
+                  console.error(e);
+                }
+              values.set(this, obj);
+
+              return obj;
+            },
+          });
+          return this[propertyKey];
+        }
+      },
+    });
+  };
+}
 
 /**
  * @description Property decorator that injects a dependency into a class property.

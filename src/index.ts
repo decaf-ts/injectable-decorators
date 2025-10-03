@@ -7,6 +7,8 @@
  * @module injectable-decorators
  */
 
+import { Metadata } from "@decaf-ts/decoration";
+
 export * from "./constants";
 export * from "./decorators";
 export * from "./Injectables";
@@ -21,3 +23,5 @@ export * from "./utils";
  * @memberOf module:injectable-decorators
  */
 export const VERSION = "##VERSION##";
+
+Metadata.registerLibrary("@decaf-ts/injectable-decorators", VERSION);
