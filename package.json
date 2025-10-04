@@ -26,14 +26,21 @@
     "coverage": "rimraf ./workdocs/reports/data/*.json && npm run test:all -- --coverage --config=./workdocs/reports/jest.coverage.config.ts",
     "lint": "eslint .",
     "lint-fix": "eslint --fix .",
-    "prepare-pr": "npm run lint-fix && npm run build:prod && npm run coverage && npm run docs",
+    "prepare-pr": "npm run repo:pr && npm run lint-fix && npm run build:prod && npm run coverage && npm run docs",
     "prepare-release": "npm run lint-fix && npm run build:prod && npm run coverage && npm run docs",
     "release": "./bin/tag-release.sh",
     "clean-publish": "npx clean-publish",
     "drawings": "for FILE in workdocs/drawings/*.drawio; do echo \"converting $FILE to image...\" && docker run --rm -v $(pwd):/data rlespinasse/drawio-export --format png $FILE; done && cp -rf workdocs/drawings/export/* workdocs/resources/",
     "uml": "cd workdocs/uml && for FILE in ./*.puml; do docker run --rm -v $(pwd):/work -w /work miy4/plantuml -DPLANTUML_LIMIT_SIZE=8192 -tpng $FILE; done && cd ../.. && cp -fr workdocs/uml/*.png workdocs/resources/",
     "docs": "npx rimraf ./docs && mkdir docs && npx build-scripts --docs",
-    "publish-docs": "docker run -it --rm --user $(id -u):$(id -g) -v \"$(pwd)/workdocs/confluence:/content\" -e ATLASSIAN_API_TOKEN=$(cat .confluence-token) ghcr.io/markdown-confluence/publish:latest"
+    "publish-docs": "docker run -it --rm --user $(id -u):$(id -g) -v \"$(pwd)/workdocs/confluence:/content\" -e ATLASSIAN_API_TOKEN=$(cat .confluence-token) ghcr.io/markdown-confluence/publish:latest",
+    "repo:init": "codex exec \"$(cat ./.codex/prompts/repo-setup.md)\nbase_path is `./`, initialize the repository\" -s workspace-write",
+    "repo:setup": "codex exec \"$(cat ./.codex/prompts/repo-setup.md)\nbase_path is ./\" -s workspace-write",
+    "repo:doc": "codex exec \"$(cat ./.codex/prompts/doc.md) $(cat ./.codex/prompts/bulk-docs.md)\nbase_path is ./\" -s workspace-write",
+    "repo:tests": "codex exec \"$(cat ./.codex/prompts/bulk-tests.md)\nbase_path is ./ and coverage is 95%\" -s workspace-write",
+    "repo:readme": "codex exec \"$(cat ./.codex/prompts/update-readme.md)\nbase_path is ./\" -s workspace-write",
+    "repo:pr": "npm run repo:doc && npm run repo:tests && npm run repo:readme",
+    "sync-codex": "./bin/sync-codex.sh"
   },
   "files": [
     "dist/",
@@ -100,7 +107,7 @@
     "typescript-eslint": "^8.31.0"
   },
   "peerDependencies": {
-    "@decaf-ts/decoration": "^0.0.7",
+    "@decaf-ts/decoration": "latest",
     "reflect-metadata": "^0.2.1"
   }
 }
