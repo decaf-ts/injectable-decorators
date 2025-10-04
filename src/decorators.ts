@@ -2,7 +2,7 @@ import { DefaultInjectablesConfig, InjectablesKeys } from "./constants";
 import { Injectables } from "./Injectables";
 import { getInjectKey, getTypeFromDecorator } from "./utils";
 import { InjectableMetadata, InstanceCallback } from "./types";
-import { Decoration, prop } from "@decaf-ts/decoration";
+import { Decoration } from "@decaf-ts/decoration";
 
 /**
  * @description Configuration options for the @injectable decorator.
