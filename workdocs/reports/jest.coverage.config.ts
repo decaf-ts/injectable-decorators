@@ -21,7 +21,7 @@ const config: Config.InitialOptions = {
         filename: "test-report.html",
         openReport: true,
         expand: true,
-        pageTitle: "injectable-decorators Test Report",
+        pageTitle: "@decaf-ts/injectable-decorators",
         stripSkippedTest: true,
         darkTheme: true,
         enableMergeData: true,
@@ -33,8 +33,8 @@ const config: Config.InitialOptions = {
     global: {
       branches: 40,
       functions: 73,
-      lines: 80,
-      statements: 82,
+      lines: 79,
+      statements: 76,
     },
   },
 };

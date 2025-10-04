@@ -32,8 +32,8 @@
       "useLongnameInNav": false
     },
     "better-docs": {
-      "name": "ts-template",
-      "title": "TypeScript workspace template",
+      "name": "@decaf-ts/injectable-decorators",
+      "title": "@decaf-ts/injectable-decorators",
       "hideGenerator": true,
       "useLongnameInNav": false,
       "navLinks": [
