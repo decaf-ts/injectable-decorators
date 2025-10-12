@@ -263,7 +263,7 @@ export function injectBaseDecorator(
   category?: symbol | string | Constructor | Partial<InjectOptions>,
   cfg?: Partial<InjectOptions>
 ) {
-  return function injectableInnerDecorator(target: any, propertyKey: any) {
+  return function injectInnerDecorator(target: any, propertyKey: any) {
     const config: InjectOptions = (
       cfg || typeof category === "object" ? category : {}
     ) as InjectOptions;
