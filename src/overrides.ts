@@ -13,7 +13,7 @@ import { InjectOptions } from "./decorators";
   let symbol: symbol;
   if (typeof category !== "symbol") {
     if (typeof category === "string") symbol = Symbol.for(category);
-    else symbol = Symbol.for(Metadata.constr(category) || category);
+    else symbol = Metadata.Symbol(Metadata.constr(category) || category);
   } else {
     symbol = category;
   }

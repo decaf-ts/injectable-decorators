@@ -76,8 +76,7 @@ Unlike more complex DI frameworks, this library doesn't require extensive config
 
 ### How to Use
 
-- [Initial Setup](./workdocs/tutorials/For%20Developers.md#_initial-setup_)
-- [Installation](./workdocs/tutorials/For%20Developers.md#installation)
+- See Initial Setup and Installation in: ./workdocs/tutorials/For Developers.md
 
 ## Basic Usage Examples
 
