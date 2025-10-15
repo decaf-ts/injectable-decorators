@@ -9,7 +9,7 @@
   },
   "types": "lib/index.d.ts",
   "scripts": {
-    "do-install": "TOKEN=$(cat .token) npm install",
+    "do-install": "NPM_TOKEN=$(cat .npmtoken) npm install",
     "update-dependencies": "PREFIX=\"decaf-ts\"; npm ls | grep \"$PREFIX\" | awk -F/ '{print $NF}' | sed 's/@.*//' | xargs -I package npm update @\"$PREFIX\"/package",
     "update-scripts": "npx update-scripts",
     "on-first-run": "npx update-scripts --boot",
