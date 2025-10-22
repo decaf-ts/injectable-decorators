@@ -1,8 +1,8 @@
 import { DefaultInjectablesConfig, InjectablesKeys } from "./constants";
 import { Injectables } from "./Injectables";
-import { getInjectKey, getTypeFromDecorator } from "./utils";
+import { getInjectKey } from "./utils";
 import { InjectableMetadata, InstanceCallback } from "./types";
-import { Decoration } from "@decaf-ts/decoration";
+import { Decoration, Metadata, prop } from "@decaf-ts/decoration";
 
 /**
  * @description Configuration options for the @injectable decorator.
@@ -268,10 +268,14 @@ export function injectBaseDecorator(
       cfg || typeof category === "object" ? category : {}
     ) as InjectOptions;
 
+    if (propertyKey) {
+      prop()(target, propertyKey);
+    }
+
     const name: symbol | string | Constructor | undefined =
       (typeof category !== "object" &&
         (category as symbol | string | Constructor)) ||
-      getTypeFromDecorator(target, propertyKey);
+      Metadata.type(target.constructor, propertyKey);
     if (!name) {
       throw new Error(`Could not get Type from decorator`);
     }
