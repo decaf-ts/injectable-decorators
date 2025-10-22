@@ -23,5 +23,5 @@ export * from "./utils";
  * @memberOf module:injectable-decorators
  */
 export const VERSION = "##VERSION##";
-
-Metadata.registerLibrary("@decaf-ts/injectable-decorators", VERSION);
+export const PACKAGE_NAME = "##PACKAGE_NAME##";
+Metadata.registerLibrary(PACKAGE_NAME, VERSION);
