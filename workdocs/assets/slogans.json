@@ -1,0 +1,188 @@
+{
+  "injectable‑decorators": [
+    {
+      "Slogan": "Injectable‑Decorators: for dependency injection without the caffeine crash.",
+      "Tags": "DI, Coffee‑themed, Chill"
+    },
+    {
+      "Slogan": "Services that stay calm and single‑toned.",
+      "Tags": "Singleton, Calm, Technical"
+    },
+    {
+      "Slogan": "Injectables with latte‑style smoothness.",
+      "Tags": "Injectables, Coffee‑themed, Developer"
+    },
+    {
+      "Slogan": "When your dependencies relax, your code shines.",
+      "Tags": "Dependencies, Calm, Productivity"
+    },
+    {
+      "Slogan": "Decorate your classes instead of overdosing on caffeine.",
+      "Tags": "Decorators, Humor, DI"
+    },
+    {
+      "Slogan": "Lazy inject. Latte sip. Low stress.",
+      "Tags": "LazyLoading, Coffee‑themed, Developer"
+    },
+    {
+      "Slogan": "Services: lean, typed and decaf‑ready.",
+      "Tags": "Services, Calm, Branding"
+    },
+    {
+      "Slogan": "Let the framework inject calm into your architecture.",
+      "Tags": "Architecture, Calm, DI"
+    },
+    {
+      "Slogan": "No adrenaline‑rush dependencies—just clean injectables.",
+      "Tags": "DI, Humor, Calm"
+    },
+    {
+      "Slogan": "Singletons that don’t give you singleton panic.",
+      "Tags": "Singleton, DeveloperDX, Calm"
+    },
+    {
+      "Slogan": "When your components stay composed, so does your heartbeat.",
+      "Tags": "Components, Calm, DI"
+    },
+    {
+      "Slogan": "Provider‑level control without the heart palpitations.",
+      "Tags": "Providers, Calm, Technical"
+    },
+    {
+      "Slogan": "Injectables that serve features, not caffeine jitters.",
+      "Tags": "Injectables, Coffee‑themed, Developer"
+    },
+    {
+      "Slogan": "Register once, relax forever.",
+      "Tags": "Registration, Chill, Developer"
+    },
+    {
+      "Slogan": "Dependency injection with a decaf mindset.",
+      "Tags": "DI, Coffee‑themed, Branding"
+    },
+    {
+      "Slogan": "Let the container handle life‑cycle while you handle the latte.",
+      "Tags": "Lifecycle, Humorous, Developer"
+    },
+    {
+      "Slogan": "Your architecture’s barista: smoother constructs, stronger features.",
+      "Tags": "Architecture, Coffee‑themed, Technical"
+    },
+    {
+      "Slogan": "Inject calm. Avoid crashes.",
+      "Tags": "Calm, Succinct, Developer"
+    },
+    {
+      "Slogan": "Decorators that plug in your services like espresso machines plug in coffee.",
+      "Tags": "Decorators, Coffee‑themed, Humor"
+    },
+    {
+      "Slogan": "Modules, providers and cappuccino vibes.",
+      "Tags": "Modules, Coffee‑themed, Developer"
+    },
+    {
+      "Slogan": "When your DI stack mellows, your dev team relaxes.",
+      "Tags": "DI, Team, Calm"
+    },
+    {
+      "Slogan": "Injectables that handle wiring while you sip your decaf.",
+      "Tags": "Wiring, Coffee‑themed, Developer"
+    },
+    {
+      "Slogan": "From class to instance without the caffeine spike.",
+      "Tags": "Classes, Calm, DI"
+    },
+    {
+      "Slogan": "Avoid circular dependencies and caffeine spirals.",
+      "Tags": "CircularDeps, Humor, Technical"
+    },
+    {
+      "Slogan": "Services injected like cream into coffee—smooth blend.",
+      "Tags": "Services, Metaphor, Coffee‑themed"
+    },
+    {
+      "Slogan": "Your DI container just checked in for its coffee break.",
+      "Tags": "DI, Fun, Chill"
+    },
+    {
+      "Slogan": "Lazy‑load your modules. No sprint after coffee needed.",
+      "Tags": "LazyLoad, Coffee‑themed, Developer"
+    },
+    {
+      "Slogan": "Injectables with good taste and zero crash.",
+      "Tags": "Injectables, Coffee‑themed, Calm"
+    },
+    {
+      "Slogan": "Let your architecture brew steadily while you ship features.",
+      "Tags": "Architecture, Productivity, Calm"
+    },
+    {
+      "Slogan": "Dependency graphs that look like latte art, not chaos.",
+      "Tags": "DependencyGraph, Coffee‑themed, Humor"
+    },
+    {
+      "Slogan": "Injectable‑Decorators: because your services deserve a decaf‑upgrade.",
+      "Tags": "Services, Branding, Coffee‑themed"
+    },
+    {
+      "Slogan": "Register. Inject. Relax.",
+      "Tags": "Workflow, Calm, Developer"
+    },
+    {
+      "Slogan": "Your services lounge in the container while your code wears sneakers.",
+      "Tags": "Services, Metaphor, Humor"
+    },
+    {
+      "Slogan": "Singletons don’t have to mean chaos; they can mean calm.",
+      "Tags": "Singleton, Calm, Developer"
+    },
+    {
+      "Slogan": "Inject your dependencies without injecting caffeine.",
+      "Tags": "DI, Coffee‑themed, Fun"
+    },
+    {
+      "Slogan": "When the architecture chills, your feature rollout hums.",
+      "Tags": "Architecture, Calm, Productivity"
+    },
+    {
+      "Slogan": "Decorator‑driven DI so you don’t decorate your blood pressure.",
+      "Tags": "Decorators, Humor, Developer"
+    },
+    {
+      "Slogan": "One injector to rule them all, but quietly.",
+      "Tags": "Injector, Calm, Technical"
+    },
+    {
+      "Slogan": "Your services should pass tests, not palpitations.",
+      "Tags": "Testing, Calm, DI"
+    },
+    {
+      "Slogan": "Injectables served neat, without the espresso shot.",
+      "Tags": "Injectables, Coffee‑themed, Developer"
+    },
+    {
+      "Slogan": "Keep calm and inject dependencies.",
+      "Tags": "DI, Playful, Calm"
+    },
+    {
+      "Slogan": "Let the container take the wheel while you sip slowly.",
+      "Tags": "Container, Chill, Developer"
+    },
+    {
+      "Slogan": "Switch the coffee for code; your DI stays stable.",
+      "Tags": "Code, Calm, DI"
+    },
+    {
+      "Slogan": "Services humming quietly. Heartbeat humming quietly too.",
+      "Tags": "Services, Calm, Developer"
+    },
+    {
+      "Slogan": "Decorator‑based DI: strong type safety, no caffeine spikes.",
+      "Tags": "Decorators, Typing, Calm"
+    },
+    {
+      "Slogan": "Injectable‑Decorators: for code that steams smoothly, not shouts loudly.",
+      "Tags": "Branding, Calm, Technical"
+    }
+  ]
+}
