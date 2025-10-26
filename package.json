@@ -55,17 +55,16 @@
     "npm": ">=10.0.0"
   },
   "keywords": [
-    "typescript",
+    "injectable",
+    "dependency-injection",
     "decorators",
-    "database",
-    "create",
-    "transactions",
-    "update",
-    "read",
-    "delete",
-    "CRUD",
-    "id",
-    "timestamp"
+    "typescript",
+    "decaf",
+    "services",
+    "containers",
+    "di",
+    "testability",
+    "lifecycle"
   ],
   "author": "Tiago Venceslau and Contributors",
   "license": "MIT",
