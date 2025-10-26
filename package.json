@@ -76,10 +76,6 @@
   "devDependencies": {
     "@decaf-ts/utils": "latest",
     "@eslint/js": "^9.25.1",
-    "@rollup/plugin-commonjs": "^28.0.3",
-    "@rollup/plugin-json": "^6.1.0",
-    "@rollup/plugin-node-resolve": "^16.0.1",
-    "@rollup/plugin-typescript": "^12.1.2",
     "@stylistic/eslint-plugin": "^4.2.0",
     "@types/jest": "^29.5.14",
     "clean-publish": "^5.1.0",
@@ -99,7 +95,6 @@
     "npm-check-updates": "^18.0.0",
     "prettier": "3.5.3",
     "rimraf": "^6.0.1",
-    "rollup": "^4.40.0",
     "ts-jest": "^29.3.2",
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
