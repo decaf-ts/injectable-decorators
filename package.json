@@ -73,6 +73,7 @@
   },
   "homepage": "https://github.com/decaf-ts/injectable-decorators#readme",
   "devDependencies": {
+    "@decaf-ts/logging": "latest",
     "@decaf-ts/utils": "latest",
     "@eslint/js": "^9.25.1",
     "@stylistic/eslint-plugin": "^4.2.0",
