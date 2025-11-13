@@ -281,11 +281,7 @@ export function injectBaseDecorator(
       (typeof category !== "object" &&
         (category as symbol | string | Constructor)) ||
       Metadata.type(lookupConstructor, propertyKey);
-    if (!name) {
-      throw new Error(`Could not get Type from decorator`);
-    }
 
-    // prop()(target, propertyKey);
     Reflect.defineMetadata(
       getInjectKey(InjectablesKeys.INJECT),
       {
@@ -312,10 +308,10 @@ export function injectBaseDecorator(
             get(this: any) {
               let obj = values.get(this);
               if (obj) return obj;
-              obj = Injectables.get(name, ...(config.args || []));
+              obj = Injectables.get(name as any, ...(config.args || []));
               if (!obj)
                 throw new Error(
-                  `Could not get Injectable ${name.toString()} to inject in ${target.constructor ? target.constructor.name : target.name}'s ${propertyKey}`
+                  `Could not get Injectable ${(name as any).toString()} to inject in ${target.constructor ? target.constructor.name : target.name}'s ${propertyKey}`
                 );
               if (config.transformer)
                 try {
