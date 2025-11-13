@@ -272,10 +272,15 @@ export function injectBaseDecorator(
       prop()(target, propertyKey);
     }
 
+    const definitionTarget =
+      typeof target === "function" ? target.prototype : target;
+    const lookupConstructor =
+      typeof target === "function" ? target : target.constructor;
+
     const name: symbol | string | Constructor | undefined =
       (typeof category !== "object" &&
         (category as symbol | string | Constructor)) ||
-      Metadata.type(target.constructor, propertyKey);
+      Metadata.type(lookupConstructor, propertyKey);
     if (!name) {
       throw new Error(`Could not get Type from decorator`);
     }
@@ -292,11 +297,11 @@ export function injectBaseDecorator(
 
     const values = new WeakMap();
 
-    Object.defineProperty(target, propertyKey, {
+    Object.defineProperty(definitionTarget, propertyKey, {
       configurable: true,
       get(this: any) {
         const descriptor: PropertyDescriptor = Object.getOwnPropertyDescriptor(
-          target,
+          definitionTarget,
           propertyKey
         ) as PropertyDescriptor;
         if (descriptor.configurable) {
