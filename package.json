@@ -76,7 +76,6 @@
     "@decaf-ts/utils": "latest"
   },
   "peerDependencies": {
-    "@decaf-ts/decoration": "latest",
-    "reflect-metadata": "^0.2.1"
+    "@decaf-ts/decoration": "latest"
   }
 }
