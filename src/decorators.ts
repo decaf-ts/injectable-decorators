@@ -282,6 +282,12 @@ export function injectBaseDecorator(
         (category as symbol | string | Constructor)) ||
       Metadata.type(lookupConstructor, propertyKey);
 
+    if (!name) {
+      throw new Error(
+        `Could not determine injectable type for ${String(propertyKey)} on ${lookupConstructor?.name || "unknown"}`
+      );
+    }
+
     Reflect.defineMetadata(
       getInjectKey(InjectablesKeys.INJECT),
       {

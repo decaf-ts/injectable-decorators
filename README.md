@@ -26,7 +26,7 @@ A lightweight TypeScript dependency injection library that provides decorators f
 
 Documentation available [here](https://decaf-ts.github.io/injectable-decorators/)
 
-Minimal size: 1.4 KB kb gzipped
+Minimal size: 1.5 KB kb gzipped
 
 
 ### Description
