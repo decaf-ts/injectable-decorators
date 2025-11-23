@@ -291,41 +291,37 @@ export function injectBaseDecorator(
       propertyKey
     );
 
-    const values = new WeakMap();
+    const values = new WeakMap<any, any>();
 
     Object.defineProperty(definitionTarget, propertyKey, {
       configurable: true,
+      enumerable: true,
       get(this: any) {
-        const descriptor: PropertyDescriptor = Object.getOwnPropertyDescriptor(
-          definitionTarget,
-          propertyKey
-        ) as PropertyDescriptor;
-        if (descriptor.configurable) {
-          // let /obj: any;
-          Object.defineProperty(this, propertyKey, {
-            enumerable: true,
-            configurable: false,
-            get(this: any) {
-              let obj = values.get(this);
-              if (obj) return obj;
-              obj = Injectables.get(name as any, ...(config.args || []));
-              if (!obj)
-                throw new Error(
-                  `Could not get Injectable ${(name as any).toString()} to inject in ${target.constructor ? target.constructor.name : target.name}'s ${propertyKey}`
-                );
-              if (config.transformer)
-                try {
-                  obj = config.transformer(obj, target);
-                } catch (e) {
-                  console.error(e);
-                }
-              values.set(this, obj);
-
-              return obj;
-            },
-          });
-          return this[propertyKey];
+        if (!values.has(this)) {
+          let obj = Injectables.get(name as any, ...(config.args || []));
+          if (!obj) {
+            throw new Error(
+              `Could not get Injectable ${(name as any).toString()} to inject in ${this.constructor ? this.constructor.name : target.name}'s ${propertyKey}`
+            );
+          }
+          if (config.transformer) {
+            try {
+              obj = config.transformer(obj, this);
+            } catch (e) {
+              console.error(e);
+            }
+          }
+          values.set(this, obj);
         }
+
+        return values.get(this);
+      },
+      set(this: any, value: any) {
+        if (typeof value === "undefined") {
+          values.delete(this);
+          return;
+        }
+        values.set(this, value);
       },
     });
   };
