@@ -73,10 +73,10 @@
   },
   "homepage": "https://github.com/decaf-ts/injectable-decorators#readme",
   "devDependencies": {
-    "@decaf-ts/decorator-validation": "^1.11.0",
+    "@decaf-ts/decorator-validation": "latest",
     "@decaf-ts/utils": "latest"
   },
-  "peerDependencies": {
+  "dependencies": {
     "@decaf-ts/decoration": "latest"
   }
 }
