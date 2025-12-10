@@ -2,7 +2,8 @@ import { DefaultInjectablesConfig, InjectablesKeys } from "./constants";
 import { Injectables } from "./Injectables";
 import { getInjectKey } from "./utils";
 import { InjectableMetadata, InstanceCallback } from "./types";
-import { Decoration, Metadata, prop } from "@decaf-ts/decoration";
+import { Decoration, Metadata, prop, metadata } from "@decaf-ts/decoration";
+import { ModelKeys } from "@decaf-ts/decorator-validation";
 
 /**
  * @description Configuration options for the @injectable decorator.
@@ -39,14 +40,14 @@ export function injectableBaseDecorator(
     const symbol = Symbol.for(category || original.toString());
     category = category || original.name;
 
-    const metadata: InjectableMetadata = {
+    const meta: InjectableMetadata = {
       class: category as string,
       symbol: symbol,
     };
 
     Reflect.defineMetadata(
       getInjectKey(InjectablesKeys.INJECTABLE),
-      metadata,
+      meta,
       original
     );
     // the new constructor behaviour
@@ -67,10 +68,10 @@ export function injectableBaseDecorator(
 
     Reflect.defineMetadata(
       getInjectKey(InjectablesKeys.INJECTABLE),
-      metadata,
+      meta,
       newConstructor
     );
-
+    metadata(ModelKeys.CONSTRUCTOR, original)(newConstructor);
     Injectables.register(original, symbol, cfg);
     // return new constructor (will override original)
     return newConstructor;

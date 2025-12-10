@@ -3,6 +3,8 @@
 
 A lightweight TypeScript dependency injection library that provides decorators for marking classes as injectable singletons and injecting dependencies into class properties. It features a centralized registry for managing dependencies, lazy loading of injected properties, and support for custom transformations of injected instances.
 
+> Release docs refreshed on 2025-11-26. See [workdocs/reports/RELEASE_NOTES.md](./workdocs/reports/RELEASE_NOTES.md) for ticket summaries.
+
 ![Licence](https://img.shields.io/github/license/decaf-ts/injectable-decorators.svg?style=plastic)
 ![GitHub language count](https://img.shields.io/github/languages/count/decaf-ts/injectable-decorators?style=plastic)
 ![GitHub top language](https://img.shields.io/github/languages/top/decaf-ts/injectable-decorators?style=plastic)
@@ -309,6 +311,9 @@ Notes:
   - strategy;
   - builder;
   - etc;
+
+## Release Documentation Hooks
+Stay aligned with the automated release pipeline by reviewing [Release Notes](./workdocs/reports/RELEASE_NOTES.md) and [Dependencies](./workdocs/reports/DEPENDENCIES.md) after trying these recipes (updated on 2025-11-26).
 
 
 ### Related
