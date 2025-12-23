@@ -44,7 +44,8 @@
   },
   "files": [
     "dist/",
-    "lib/"
+    "lib/",
+    "workdocs/assets/slogans.json"
   ],
   "repository": {
     "type": "git",
