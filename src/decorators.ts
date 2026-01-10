@@ -2,7 +2,13 @@ import { DefaultInjectablesConfig, InjectablesKeys } from "./constants";
 import { Injectables } from "./Injectables";
 import { getInjectKey } from "./utils";
 import { InjectableMetadata, InstanceCallback } from "./types";
-import { Decoration, Metadata, prop, metadata } from "@decaf-ts/decoration";
+import {
+  Decoration,
+  Metadata,
+  prop,
+  metadata,
+  Constructor,
+} from "@decaf-ts/decoration";
 import { ModelKeys } from "@decaf-ts/decorator-validation";
 
 /**
@@ -77,20 +83,6 @@ export function injectableBaseDecorator(
     return newConstructor;
   };
 }
-
-/**
- * @description Generic constructor type for class-like values.
- * @summary Represents any class that can be instantiated with arbitrary arguments, producing an instance of type T.
- * @template T The instance type created by the constructor.
- * @typedef Constructor
- * @example
- * // Using Constructor to type a factory
- * function make<T>(Ctor: Constructor<T>, ...args: any[]): T {
- *   return new Ctor(...args);
- * }
- * @memberOf module:injectable-decorators
- */
-export type Constructor<T = any> = { new (...args: any[]): T };
 
 /**
  * @description Decorator that marks a class as available for dependency injection.

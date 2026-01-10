@@ -1,4 +1,4 @@
-import { Constructor } from "./decorators";
+import { Constructor } from "@decaf-ts/decoration";
 
 /**
  * @description Callback function type used to transform or initialize an instance after construction.
