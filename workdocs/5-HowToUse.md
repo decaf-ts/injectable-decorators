@@ -1,236 +1,99 @@
-### How to Use
+# How to Use
 
-- See Initial Setup and Installation in: ./workdocs/tutorials/For Developers.md
+This guide provides examples of how to use the main features of the `@decaf-ts/injectable-decorators` library.
 
-## Basic Usage Examples
+## Creating an Injectable Service
 
-### 1) Mark a class as injectable and get it from the registry
-
-Description: Define a class with @injectable() so it becomes available through the central registry. Creating with new returns the instance managed by the registry.
+The `@injectable()` decorator marks a class as available for dependency injection.
 
 ```typescript
-import 'reflect-metadata';
-import { injectable, Injectables } from 'injectable-decorators';
+import { injectable } from '@decaf-ts/injectable-decorators';
 
 @injectable()
-class InitialObject {
-  doSomething() { return 5; }
+class MyService {
+  greet() {
+    return 'Hello from MyService!';
+  }
 }
-
-const obj = new InitialObject();
-const same = Injectables.get(InitialObject);
-// obj and same refer to the same instance (singleton by default)
 ```
 
-### 2) Inject a dependency into a property
+## Injecting a Service
 
-Description: Use @inject() on a typed property. The instance is created lazily when the property is first accessed and cached thereafter.
+The `@inject()` decorator injects a registered dependency into a class property.
 
 ```typescript
-import 'reflect-metadata';
-import { injectable, inject, Injectables } from 'injectable-decorators';
+import { inject } from '@decaf-ts/injectable-decorators';
+import { MyService } from './MyService';
 
-@injectable()
-class SomeService { value = 5; }
-
-class Controller {
+class MyComponent {
   @inject()
-  service!: SomeService; // non-null assertion because it's set outside the constructor
+  private myService!: MyService;
+
+  doSomething() {
+    console.log(this.myService.greet());
+  }
 }
 
-const c = new Controller();
-console.log(c.service.value); // 5
-console.log(c.service === Injectables.get(SomeService)); // true
+const component = new MyComponent();
+component.doSomething(); // Outputs: "Hello from MyService!"
 ```
 
-### 3) Use a custom category (string) for minification or upcasting
+## Singleton vs. On-Demand
 
-Description: Provide a stable name when class names may change (e.g., minification) or to upcast through a base type.
+By default, injectables are singletons. You can change this behavior using the `@onDemand` decorator or by passing a configuration object to `@injectable`.
+
+### Singleton (Default)
 
 ```typescript
-import 'reflect-metadata';
-import { injectable, inject, singleton } from 'injectable-decorators';
+import { injectable } from '@decaf-ts/injectable-decorators';
 
-@singleton()
-class AAA { a = 'aaa'; }
-
-@injectable('AAA')
-class BBB extends AAA { b = 'bbb'; }
-
-const b = new BBB();
-
-class Host {
-  @inject()
-  repo!: AAA; // resolves to the instance registered under category 'AAA'
+@injectable() // or @singleton()
+class MySingletonService {
+  constructor() {
+    console.log('MySingletonService instance created');
+  }
 }
 
-const h = new Host();
-console.log(h.repo === b); // true
+// ...
+
+const component1 = new MyComponent(); // MySingletonService instance created
+const component2 = new MyComponent(); // No new instance created
 ```
 
-### 4) Inject by explicit category (string)
-
-Description: When a different string category was used at registration, pass that string to @inject.
+### On-Demand
 
 ```typescript
-import 'reflect-metadata';
-import { inject, singleton } from 'injectable-decorators';
-
-class DDD { a = 'aaa'; }
-
-@singleton('EEE')
-class CCC extends DDD { b = 'bbb'; }
-
-const instance = new CCC();
-
-class Holder {
-  @inject('EEE')
-  repo!: CCC;
-}
-
-const h = new Holder();
-console.log(h.repo === instance); // true
-```
-
-### 5) Map one constructor to another and inject by constructor
-
-Description: You can register an injectable using another constructor as the category, then inject it by that constructor.
-
-```typescript
-import 'reflect-metadata';
-import { injectable, inject } from 'injectable-decorators';
-
-class Token {}
-
-@injectable(Token, { callback: (original) => original })
-class Impl {
-  id = 1;
-}
-
-class UsesImpl {
-  @inject(Token)
-  object!: Impl; // injects the instance registered under Token (Impl instance)
-}
-
-const u = new UsesImpl();
-console.log(u.object instanceof Impl); // true
-```
-
-### 6) Non-singleton injectables with @onDemand and passing constructor args
-
-Description: Use @onDemand() so each injection produces a fresh instance. You can pass args for construction via @inject({ args }).
-
-```typescript
-import 'reflect-metadata';
-import { onDemand, inject } from 'injectable-decorators';
+import { onDemand } from '@decaf-ts/injectable-decorators';
 
 @onDemand()
-class FreshObject {
-  constructor(public a?: string, public b?: string) {}
+class MyOnDemandService {
+  constructor() {
+    console.log('MyOnDemandService instance created');
+  }
 }
 
-class ParentA {
-  @inject()
-  fresh!: FreshObject; // new instance per parent
+// ...
+
+const component1 = new MyComponent(); // MyOnDemandService instance created
+const component2 = new MyComponent(); // MyOnDemandService instance created
+```
+
+## Injecting with a Category
+
+You can register and inject dependencies using a string or symbol as a category, which is useful for avoiding issues with minification or for upcasting.
+
+```typescript
+import { injectable, inject } from '@decaf-ts/injectable-decorators';
+
+const IMyService = 'IMyService';
+
+@injectable(IMyService)
+class MyServiceImpl {
+  // ...
 }
 
-class ParentB {
-  @inject({ args: ['x', 'y'] })
-  fresh!: FreshObject; // passes constructor args to on-demand instance
+class MyOtherComponent {
+  @inject(IMyService)
+  private myService!: MyServiceImpl;
 }
-
-const p1 = new ParentA();
-const p2 = new ParentA();
-console.log(p1.fresh !== p2.fresh); // true
-
-const p3 = new ParentB();
-console.log([p3.fresh.a, p3.fresh.b]); // ['x','y']
 ```
-
-### 7) Transform an injected value
-
-Description: Modify the resolved instance before assignment using a transformer.
-
-```typescript
-import 'reflect-metadata';
-import { injectable, inject } from 'injectable-decorators';
-
-@injectable('SomeOtherObject')
-class SomeOtherObject { value() { return 10; } }
-
-class Controller {
-  @inject({ transformer: (obj: SomeOtherObject, c: Controller) => '1' })
-  repo!: SomeOtherObject | string;
-}
-
-const c = new Controller();
-console.log(c.repo); // '1'
-```
-
-### 8) Registry operations: reset and swapping registry
-
-Description: Reset clears all registrations. Swapping the registry replaces the storage, losing previous entries.
-
-```typescript
-import { Injectables, InjectableRegistryImp } from 'injectable-decorators';
-
-// ensure something is registered
-Injectables.get('SomeOtherObject');
-
-// swap to a fresh registry
-Injectables.setRegistry(new InjectableRegistryImp());
-console.log(Injectables.get('SomeOtherObject')); // undefined
-
-// reset to a new empty default registry
-Injectables.reset();
-```
-
-### 9) Singleton vs onDemand convenience decorators
-
-Description: Prefer @singleton() to force single instance, or @onDemand() for new instance per retrieval.
-
-```typescript
-import { singleton, onDemand } from 'injectable-decorators';
-
-@singleton()
-class OneOnly {}
-
-@onDemand()
-class Many {}
-```
-
-### 10) Utility helpers and constants
-
-Description: Generate reflection keys and understand default config.
-
-```typescript
-import { getInjectKey } from 'injectable-decorators';
-
-console.log(getInjectKey('injectable')); // "inject.db.injectable"
-console.log(getInjectKey('inject'));     // "inject.db.inject"
-```
-
-Notes:
-- Always include `import 'reflect-metadata'` once in your app before using decorators.
-- VERSION is exported as a string placeholder defined at build time.
-
-
-## Coding Principles
-
-- group similar functionality in folders (analog to namespaces but without any namespace declaration)
-- one class per file;
-- one interface per file (unless interface is just used as a type);
-- group types as other interfaces in a types.ts file per folder;
-- group constants or enums in a constants.ts file per folder;
-- group decorators in a decorators.ts file per folder;
-- always import from the specific file, never from a folder or index file (exceptions for dependencies on other packages);
-- prefer the usage of established design patters where applicable:
-  - Singleton (can be an anti-pattern. use with care);
-  - factory;
-  - observer;
-  - strategy;
-  - builder;
-  - etc;
-
-## Release Documentation Hooks
-Stay aligned with the automated release pipeline by reviewing [Release Notes](./workdocs/reports/RELEASE_NOTES.md) and [Dependencies](./workdocs/reports/DEPENDENCIES.md) after trying these recipes (updated on 2025-11-26).

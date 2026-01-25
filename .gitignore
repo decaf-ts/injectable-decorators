@@ -12,6 +12,9 @@
 /workdocs/reports/images/*
 !/workdocs/reports/images/.gitkeep
 !/workdocs/reports/jest.coverage.config.ts
+!/workdocs/reports/CHANGELOG.md
+!/workdocs/reports/DEPENDENCIES.md
+!/workdocs/reports/RELEASE_NOTES.md
 /workdocs/uml/*
 !/workdocs/uml/*.puml
 /.token
