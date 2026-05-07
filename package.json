@@ -4,10 +4,14 @@
   "description": "injectable decorators extension for decorator validation",
   "type": "module",
   "exports": {
-    "require": "./lib/index.cjs",
-    "import": "./lib/esm/index.js"
+    ".": {
+      "require": "./lib/cjs/index.cjs",
+      "import": "./lib/esm/index.js",
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/esm/index.js"
+    }
   },
-  "types": "lib/index.d.ts",
+  "types": "./lib/types/index.d.ts",
   "scripts": {
     "do-install": "NPM_TOKEN=$(cat .npmtoken) npm install",
     "update-dependencies": "PREFIX=\"decaf-ts\"; npm ls | grep \"$PREFIX\" | awk -F/ '{print $NF}' | sed 's/@.*//' | xargs -I package npm update @\"$PREFIX\"/package",
@@ -84,5 +88,8 @@
   "overrides": {
     "minimatch": "^10.2.2",
     "test-exclude": "7.0.1"
-  }
+  },
+  "main": "./lib/cjs/index.cjs",
+  "module": "./lib/esm/index.js",
+  "sideEffects": false
 }
