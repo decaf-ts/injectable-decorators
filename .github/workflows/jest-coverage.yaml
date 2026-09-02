@@ -11,7 +11,4 @@ on:
 jobs:
   coverage:
     uses: decaf-ts/reusable-actions/.github/workflows/jest-coverage.yaml@master
-    with:
-      # mirrors the repo's own jest coverageThreshold (statements), with slack
-      coverage-threshold: 72
     secrets: inherit
