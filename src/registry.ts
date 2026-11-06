@@ -173,7 +173,8 @@ export class InjectableRegistryImp implements InjectablesRegistry {
       instance = new constructor(...args);
     } catch (e: unknown) {
       throw new Error(
-        `failed to build ${name.toString()} with args ${args}: ${e}`
+        `failed to build ${name.toString()} with args ${args}: ${e}`,
+        { cause: e }
       );
     }
     if (options.singleton) {

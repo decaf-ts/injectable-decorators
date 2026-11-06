@@ -1,3 +1,4 @@
+import { it } from "@decaf-ts/for-testing";
 import { inject, injectable, onDemand, singleton } from "../../src";
 import { Injectables } from "../../src/Injectables";
 import { InjectableRegistryImp } from "../../src";

@@ -23,6 +23,6 @@ So if you can, if this project in any way. either by learning something or simpl
 
 ## License
 
-This project is released under the [MIT License](./LICENSE.md).
+This project is released under the [Mozilla Public License 2.0](./LICENSE.md).
 
 By developers, for developers...
